@@ -10,9 +10,7 @@ from cloudmesh.shell.command import command
 from cloudmesh.shell.command import map_parameters
 from cloudmesh.common.Printer import Printer
 from tabulate import tabulate
-import os
-import subprocess
-import re
+
 
 class ApptainerCommand(PluginCommand):
     # noinspection PyUnusedLocal
@@ -22,11 +20,16 @@ class ApptainerCommand(PluginCommand):
         ::
 
           Usage:
+                apptainer inspect NAME
                 apptainer list
                 apptainer --dir=DIRECTORY
                 apptainer --add=SIF
-                        apptainer cache
-                        apptainer images
+                apptainer cache
+                apptainer images
+                apptainer start NAME
+                apptainer stop NAME
+                apptainer shell NAME
+                apptainer exec NAME COMMAND
                         
                   This command can be used to manage apptainers.
 
@@ -71,7 +74,6 @@ class ApptainerCommand(PluginCommand):
 
         app = Apptainer()
 
-
         if arguments.dir:
             print("option dir")
 
@@ -82,47 +84,17 @@ class ApptainerCommand(PluginCommand):
             print(err)
 
         elif arguments.cache:
-            print("option cache")
-            output = subprocess.check_output("apptainer cache list", shell=True, universal_newlines=True)
 
-            #output = "There are 1 container file(s) using 43.48 MiB and 66 oci blob file(s) using 7.01 GiB of space\nTotal space used: 7.05 GiB"
-
-            container_files = re.search(r"There are (\d+) container file", output).group(1)
-            container_space = re.search(r"using ([\d.]+) MiB", output).group(1)
-            oci_blob_files = re.search(r"(\d+) oci blob file", output).group(1)
-            oci_blob_space = re.search(r"using ([\d.]+) GiB", output).group(1)
-            total_space = re.search(r"Total space used: ([\d.]+) GiB", output).group(1)
-
-            print("Container Files:", container_files)
-            print("Container Space:", container_space, "MiB")
-            print("OCI Blob Files:", oci_blob_files)
-            print("OCI Blob Space:", oci_blob_space, "GiB")
-            print("Total Space Used:", total_space, "GiB")
-
-            if 'SINGULARITY_CACHEDIR' in os.environ:
-                s_cache = os.environ['SINGULARITY_CACHEDIR']
-            else:
-                s_cache = None
-            if 'APPTAINER_CACHEDIR' in os.environ:
-                a_cache = os.environ['APPTAINER_CACHEDIR']
-            else:
-                a_cache = None
-
-            data = [
-                {"attribute": "Container Files", "value": container_files},
-                {"attribute": "Container Space", "value": container_space + " MiB"},
-                {"attribute": "OCI Blob Files", "value": oci_blob_files},
-                {"attribute": "OCI Blob Space", "value": oci_blob_space + " GiB"},
-                {"attribute": "Total Space Used", "value": total_space + " GiB"},
-                {"attribute": "SINGULARITY_CACHEDIR", "value": s_cache},
-                {"attribute": "APPTAINER_CACHEDIR", "value": a_cache}
-            ]
+            data = app.cache()
             print(tabulate(data, headers="keys", tablefmt="simple_grid", showindex="always"))
-
 
         elif arguments.add:
             print("option add")
             app.add_location(arguments.add)
+
+        elif arguments.inspect:
+            r = app.inspect(arguments.NAME)
+            print(tabulate(r, headers="keys", tablefmt="simple_grid", showindex="always"))
 
         elif arguments.images:
             r = app.images()

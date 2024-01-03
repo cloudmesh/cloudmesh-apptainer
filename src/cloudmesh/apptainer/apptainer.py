@@ -5,11 +5,13 @@ from cloudmesh.common. variables import Variables
 from cloudmesh.common.parameter import Parameter
 from cloudmesh.common.util import path_expand
 from cloudmesh.common.util import banner
-
-
+import re
+from cloudmesh.common.debug import VERBOSE
 import humanize
+import json
 
-    
+
+
 class Apptainer:
     def __init__(self):
         self.processes = {}
@@ -19,6 +21,7 @@ class Apptainer:
         self.load_location_from_variables()
 
     
+
     def load_location_from_variables(self):
             """
             Load the location of apptainers from the cloudmesh variable `apptainers` which is a coma separated string of dirs and sif files.
@@ -34,15 +37,23 @@ class Apptainer:
                     for name in os.listdir(entry):
                         if name.endswith(".sif"):
                             location = entry + "/" + name  # Fix: Removed unnecessary curly braces
-                            size = humanize.naturalsize(os.path.getsize(location))
-                            self.apptainers.append({"name": name, 
-                                                    "size": size, 
-                                                    "path": entry, 
-                                                    "location": location})  # Fix: Removed unnecessary double quotes
+                            try:
+                                size = humanize.naturalsize(os.path.getsize(location))
+                            except:
+                                size = "unknown"
+                            if os.path.isfile(location):
+                                self.apptainers.append({"name": name, 
+                                                        "size": size, 
+                                                        "path": entry, 
+                                                        "location": location})  # Fix: Removed unnecessary double quotes
                 else:
                     if entry.endswith(".sif"):
-                        size = humanize.naturalsize(os.path.getsize(entry))
-                        self.apptainers.append({"name": os.path.basename(entry), "size": size, "path": os.path.dirname(entry), "location": entry})
+                        try:
+                            size = humanize.naturalsize(os.path.getsize(entry))
+                        except:
+                            size = "unknown"
+                        if os.path.isfile(entry):
+                            self.apptainers.append({"name": os.path.basename(entry), "size": size, "path": os.path.dirname(entry), "location": entry})
                 
     def add_location(self, path):
         """
@@ -125,6 +136,87 @@ class Apptainer:
             banner(command)
         stdout, stderr = self._run("list", command, register=False)
         return stdout, stderr
+    
+
+    def find_image(self, name):
+        """
+        Finds the image of an instance.
+
+        Args:
+            name (str): Name of the instance.
+
+        Returns:
+            str: The image of the instance.
+        """
+        for image in self.apptainers:
+            if image["name"] == name:
+                return image["location"]
+        raise ValueError(f"Image {name} not found") 
+        
+    
+    # ...
+
+    def inspect(self, name):
+        """
+        Inspects the instance.
+
+        Args:
+            name (str): Name of the instance.
+
+        Returns:
+            dict: A dictionary containing the JSON data from stdout.
+            str: The stderr of the command.
+        """
+        location = self.find_image(name)
+        print("LOCATION", location)
+        command = f"apptainer inspect --json {location}"
+        stdout, stderr = self._run("inspect", command, register=False)
+
+        data = json.loads(stdout)
+
+        labels = data['data']['attributes']['labels']
+        result = [{'attribute': key, 'value': value} for key, value in labels.items()]        
+        result.append(
+        {
+            'attribute': 'type',
+             'value':  data['type'],
+            })
+
+        return result
+    
+
+
+    def cache(self):
+        output = subprocess.check_output("apptainer cache list", shell=True, universal_newlines=True)
+
+        #output = "There are 1 container file(s) using 43.48 MiB and 66 oci blob file(s) using 7.01 GiB of space\nTotal space used: 7.05 GiB"
+
+        container_files = re.search(r"There are (\d+) container file", output).group(1)
+        container_space = re.search(r"using ([\d.]+) MiB", output).group(1)
+        oci_blob_files = re.search(r"(\d+) oci blob file", output).group(1)
+        oci_blob_space = re.search(r"using ([\d.]+) GiB", output).group(1)
+        total_space = re.search(r"Total space used: ([\d.]+) GiB", output).group(1)
+
+        if 'SINGULARITY_CACHEDIR' in os.environ:
+            s_cache = os.environ['SINGULARITY_CACHEDIR']
+        else:
+            s_cache = None
+        if 'APPTAINER_CACHEDIR' in os.environ:
+            a_cache = os.environ['APPTAINER_CACHEDIR']
+        else:
+            a_cache = None
+
+        data = [
+            {"attribute": "Container Files", "value": container_files},
+            {"attribute": "Container Space", "value": container_space + " MiB"},
+            {"attribute": "OCI Blob Files", "value": oci_blob_files},
+            {"attribute": "OCI Blob Space", "value": oci_blob_space + " GiB"},
+            {"attribute": "Total Space Used", "value": total_space + " GiB"},
+            {"attribute": "SINGULARITY_CACHEDIR", "value": s_cache},
+            {"attribute": "APPTAINER_CACHEDIR", "value": a_cache}
+        ]
+        return data
+
 
     def stats(self, output=None, verbose=False):
         """
@@ -147,7 +239,7 @@ class Apptainer:
         stdout, stderr = self._run(command)
         return stdout, stderr
 
-    def start(self, path, name, args=[]):
+    def start(self, path, name=None, gpu=None, home=None, clean=True, args=[], dryrun=False):
         """
         Starts a new instance.
 
@@ -159,14 +251,64 @@ class Apptainer:
         Returns:
             tuple: A tuple containing the stdout and stderr of the command.
         """
-        command = f"apptainer instance start {path} {name}"
+        if name is None:
+            raise ValueError("Name of the instance must be specified")
+        if clean:
+            try:
+                out,err = self.stop(name=name)
+            except:
+                out = ""
+
+            assert "no instance found" not in out
+
+            out,err = self.list()
+            assert name not in out
+
+        if home:
+            if home == "pwd":
+                home = os.getcwd()
+            home = f"--home {home}"
+        else:
+            home = ""
+
+        if gpu is None:
+            gpu_visible_devices = ""
+        else:
+            gpu_visible_devices = f"CUDA_VISIBLE_DEVICES={gpu} "
+
+        path = self.find_image(path)
+
+        command = gpu_visible_devices + f"apptainer instance start -nv {home} {path} {name}"
         if args:
             command += " " + " ".join(args)
-        stdout, stderr = self._run(command, register=True)
+        if dryrun:
+            print("DRYRUN:", command)
+        else:
+            stdout, stderr = self._run(command, register=True)
         return stdout, stderr
+    
+
+    # def start(self, gpu=None, clean=False, wait=True):
+    #     """
+    #     Starts the TFS instance.
+    #     1. fisrt ist looks for containers with the same name and stops them
+    #     2. it checks if no container with the name is used.
+    #     3. ist starts the container 
+
+    #     """
+
+    #     self.system(f"{gpu_visible_devices} apptainer instance start --nv --home {pwd} {self.IMAGE} {self.INSTANCE} ")
+
+    #     self.instance_exec(f"tensorflow_model_server --port={self.PORT} --rest_api_port=0 --model_config_file=benchmark/models.conf >& log-{self.INSTANCE}.log &")
+    #     r = self.system("apptainer instance list")
+
+    #     self.wait_for_port(port=self.PORT)
+
+    #     print ("Server is up")
+
 
     def stop(
-        self, all=False, force=False, signal=None, timeout=10, user=None
+        self, name=None, force=False, signal=None, timeout=10, user=None
     ):
         """
         Stops the instances.
@@ -182,8 +324,6 @@ class Apptainer:
             tuple: A tuple containing the stdout and stderr of the command.
         """
         command = "apptainer instance stop"
-        if all:
-            command += " --all"
         if force:
             command += " --force"
         if signal:
@@ -192,6 +332,10 @@ class Apptainer:
             command += f" --timeout {timeout}"
         if user:
             command += f" --user {user}"
+        if name == "all":
+            command += " --all"
+        else :
+            command += f" {name}"
         stdout, stderr = self._run(command, register=False)
         return stdout, stderr
 
