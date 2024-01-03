@@ -138,7 +138,7 @@ class Apptainer:
         return stdout, stderr
     
 
-    def find_image(self, name):
+    def find_image(self, name, smart=True):
         """
         Finds the image of an instance.
 
@@ -150,7 +150,10 @@ class Apptainer:
         """
         for image in self.apptainers:
             if image["name"] == name:
-                return image["location"]
+                return image["name"], image["location"]
+        for image in self.apptainers:
+            if name in image["name"]:
+                return image["name"], image["location"]
         raise ValueError(f"Image {name} not found") 
         
     
@@ -167,21 +170,21 @@ class Apptainer:
             dict: A dictionary containing the JSON data from stdout.
             str: The stderr of the command.
         """
-        location = self.find_image(name)
-        print("LOCATION", location)
+        _name,location = self.find_image(name)
         command = f"apptainer inspect --json {location}"
         stdout, stderr = self._run("inspect", command, register=False)
 
         data = json.loads(stdout)
 
         labels = data['data']['attributes']['labels']
-        result = [{'attribute': key, 'value': value} for key, value in labels.items()]        
-        result.append(
-        {
-            'attribute': 'type',
-             'value':  data['type'],
-            })
-
+        result = []
+        result.append({'attribute': 'name','value':  _name})
+        result.append({'attribute': 'location','value':  location})
+        result += [{'attribute': key, 'value': value} for key, value in labels.items()]        
+        result.append(        {'attribute': 'type','value':  data['type']})
+        size = humanize.naturalsize(os.path.getsize(location))
+        result.append({'attribute': 'size','value':  size})
+        
         return result
     
 
@@ -276,9 +279,9 @@ class Apptainer:
         else:
             gpu_visible_devices = f"CUDA_VISIBLE_DEVICES={gpu} "
 
-        path = self.find_image(path)
+        _name,path = self.find_image(path)
 
-        command = gpu_visible_devices + f"apptainer instance start -nv {home} {path} {name}"
+        command = gpu_visible_devices + f"apptainer instance start -nv {home} {path} {_name}"
         if args:
             command += " " + " ".join(args)
         if dryrun:
