@@ -1,6 +1,6 @@
 import os
 import subprocess
-
+import sys
 
 class Apptainer:
     def __init__(self):
@@ -36,7 +36,7 @@ class Apptainer:
             stderr=subprocess.PIPE,
             text=True,
         )
-        if registeris None:
+        if register is None:
             pass
         elif register:
             self.processes.append({"name": name, "pid": process})
@@ -197,4 +197,7 @@ class Apptainer:
         command = f"apptainer shell instance://{name}"
         stdout, stderr = self._run(command)
         return stdout, stderr
-        
+
+def main():
+    print("OOOO")
+    os.system(f"cms apptainer {sys.arg}")

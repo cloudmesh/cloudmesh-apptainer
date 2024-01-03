@@ -7,8 +7,8 @@ requires = [
 ]
 
 [project]
-name = "cloudmesh-bar"
-version = "5.0.20"
+name = "cloudmesh-apptainer"
+version = "5.0.0"
 description = "An example cloudmesh command"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -53,12 +53,15 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/cloudmesh/cloudmesh-bar"
-Documentation = "https://github.com/cloudmesh/cloudmesh-bar/blob/main/README.md"
-Repository = "https://github.com/cloudmesh/cloudmesh-bar.git"
-Issues = "https://github.com/cloudmesh/cloudmesh-bar/issues"
-Changelog = "https://github.com/cloudmesh/cloudmesh-bar/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/cloudmesh/cloudmesh-apptainer"
+Documentation = "https://github.com/cloudmesh/cloudmesh-apptainer/blob/main/README.md"
+Repository = "https://github.com/cloudmesh/cloudmesh-apptainer.git"
+Issues = "https://github.com/cloudmesh/cloudmesh-apptainer/issues"
+Changelog = "https://github.com/cloudmesh/cloudmesh-apptainer/blob/main/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["cloudmesh.bar", "cloudmesh.bar.*"]
+include = ["cloudmesh.apptainer", "cloudmesh.apptainer.*"]
+
+[project.scripts]
+cma = "cloudmesh.apptainer.apptainer:main"
