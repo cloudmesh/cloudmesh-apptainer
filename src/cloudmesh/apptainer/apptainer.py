@@ -1,11 +1,69 @@
 import os
 import subprocess
 import sys
+from cloudmesh.common. variables import Variables
+from cloudmesh.common.parameter import Parameter
+from cloudmesh.common.util import path_expand
+from cloudmesh.common.util import banner
 
+
+import humanize
+
+    
 class Apptainer:
     def __init__(self):
         self.processes = {}
-        pass
+        self.location = []
+        self.apptainers = []
+        self.variables = Variables()
+        self.load_location_from_variables()
+
+    
+    def load_location_from_variables(self):
+            """
+            Load the location of apptainers from the cloudmesh variable `apptainers` which is a coma separated string of dirs and sif files.
+            """
+            if "apptainers" not in self.variables:
+                self.variables["apptainers"] = "~/.cloudmesh/apptainer"        
+            self.location = Parameter.expand(self.variables["apptainers"])
+
+            self.apptainers = []
+            for entry in self.location:
+                entry = path_expand(entry)
+                if os.path.isdir(entry):
+                    for name in os.listdir(entry):
+                        if name.endswith(".sif"):
+                            location = entry + "/" + name  # Fix: Removed unnecessary curly braces
+                            size = humanize.naturalsize(os.path.getsize(location))
+                            self.apptainers.append({"name": name, 
+                                                    "size": size, 
+                                                    "path": entry, 
+                                                    "location": location})  # Fix: Removed unnecessary double quotes
+                else:
+                    if entry.endswith(".sif"):
+                        size = humanize.naturalsize(os.path.getsize(entry))
+                        self.apptainers.append({"name": os.path.basename(entry), "size": size, "path": os.path.dirname(entry), "location": entry})
+                
+    def add_location(self, path):
+        """
+        Adds a new location to the list of apptainer locations into the cloudmesh variable `apptainers`.
+
+        Parameters:
+        path (str): The path of the location to be added.
+
+        Returns:
+        None
+        """
+        self.variables["apptainers"] = self.variables["apptainers"] + "," + path
+        self.load_location_from_variables()
+
+    def images(self):
+        """
+        retusns the lists the images in the cloudmesh variable `apptainers`.
+
+        """
+        return self.apptainers
+
 
     def ps(self):
         """
@@ -36,7 +94,7 @@ class Apptainer:
             stderr=subprocess.PIPE,
             text=True,
         )
-        if register is None:
+        if register is None or register is False:
             pass
         elif register:
             self.processes.append({"name": name, "pid": process})
@@ -45,7 +103,7 @@ class Apptainer:
         stdout, stderr = process.communicate()
         return stdout, stderr
 
-    def list(self, output=None, logs=False, verbose=False):
+    def list(self, output=None, logs=False, verbose=True):
         """
         Lists the instances.
 
@@ -58,15 +116,14 @@ class Apptainer:
             tuple: A tuple containing the stdout and stderr of the command.
         """
         command = "apptainer instance list"
-        if "json" in output:
-            command += " --json"
-        else:
-            raise ValueError(f"Output format {output} not supported")
+        if output is not None:
+            if "json" in output:
+                command += " --json"
         if logs:
             command += " --logs"
         if verbose:
-            print(command)
-        stdout, stderr = self._run(command)
+            banner(command)
+        stdout, stderr = self._run("list", command, register=False)
         return stdout, stderr
 
     def stats(self, output=None, verbose=False):
@@ -201,3 +258,6 @@ class Apptainer:
 def main():
     print("OOOO")
     os.system(f"cms apptainer {sys.arg}")
+
+if __name__ == "__main__":
+    main()
