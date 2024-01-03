@@ -79,10 +79,9 @@ class ApptainerCommand(PluginCommand):
 
         elif arguments.list:
             print("option list")
-            out,err = app.list()
+            out = app.list()
             print (out)
-            print(err)
-
+            
         elif arguments.cache:
 
             data = app.cache()

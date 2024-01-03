@@ -9,6 +9,7 @@ import re
 from cloudmesh.common.debug import VERBOSE
 import humanize
 import json
+import json
 
 
 
@@ -114,7 +115,7 @@ class Apptainer:
         stdout, stderr = process.communicate()
         return stdout, stderr
 
-    def list(self, output=None, logs=False, verbose=True):
+    def list(self, logs=False, verbose=True):
         """
         Lists the instances.
 
@@ -124,18 +125,18 @@ class Apptainer:
             verbose (bool): Print the command before executing.
 
         Returns:
-            tuple: A tuple containing the stdout and stderr of the command.
+            dict: A dictionary containing the stdout as a dictionary.
         """
-        command = "apptainer instance list"
-        if output is not None:
-            if "json" in output:
-                command += " --json"
+        command = "apptainer instance list --json"
         if logs:
             command += " --logs"
         if verbose:
             banner(command)
         stdout, stderr = self._run("list", command, register=False)
-        return stdout, stderr
+        
+        output_dict = json.loads(stdout)
+        
+        return output_dict
     
 
     def find_image(self, name, smart=True):
