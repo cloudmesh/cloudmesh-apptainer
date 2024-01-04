@@ -104,8 +104,8 @@ class ApptainerCommand(PluginCommand):
         """
 
 
-        variables = Variables()
-        variables["apptainer_dir"] = True
+        #variables = Variables()
+        #variables["apptainer_dir"] = True
 
         map_parameters(arguments, "output")
 
