@@ -5,6 +5,7 @@ from cloudmesh.common. variables import Variables
 from cloudmesh.common.parameter import Parameter
 from cloudmesh.common.util import path_expand
 from cloudmesh.common.util import banner
+from cloudmesh.common.Shell import Shell
 import re
 from cloudmesh.common.debug import VERBOSE
 import humanize
@@ -63,8 +64,6 @@ class Apptainer:
                 self.apptainers = []
         else:
             Console.warning("apptainer.yaml does not exist")
-
-    
 
 
     def load_location_from_db(self):
@@ -256,15 +255,15 @@ class Apptainer:
 
 
     def cache(self):
-        output = subprocess.check_output("apptainer cache list", shell=True, universal_newlines=True)
+        result = subprocess.check_output("apptainer cache list", shell=True, universal_newlines=True)
 
         #output = "There are 1 container file(s) using 43.48 MiB and 66 oci blob file(s) using 7.01 GiB of space\nTotal space used: 7.05 GiB"
 
-        container_files = re.search(r"There are (\d+) container file", output).group(1)
-        container_space = re.search(r"using ([\d.]+) MiB", output).group(1)
-        oci_blob_files = re.search(r"(\d+) oci blob file", output).group(1)
-        oci_blob_space = re.search(r"using ([\d.]+) GiB", output).group(1)
-        total_space = re.search(r"Total space used: ([\d.]+) GiB", output).group(1)
+        container_files = re.search(r"There are (\d+) container file", result).group(1)
+        container_space = re.search(r"using ([\d.]+) MiB", result).group(1)
+        oci_blob_files = re.search(r"(\d+) oci blob file", result).group(1)
+        oci_blob_space = re.search(r"using ([\d.]+) GiB", result).group(1)
+        total_space = re.search(r"Total space used: ([\d.]+) GiB", result).group(1)
 
         if 'SINGULARITY_CACHEDIR' in os.environ:
             s_cache = os.environ['SINGULARITY_CACHEDIR']
@@ -275,16 +274,16 @@ class Apptainer:
         else:
             a_cache = None
 
-        data = [
-            {"attribute": "hostname", "value": self.hostname},
-            {"attribute": "Container Files", "value": container_files},
-            {"attribute": "Container Space", "value": container_space + " MiB"},
-            {"attribute": "OCI Blob Files", "value": oci_blob_files},
-            {"attribute": "OCI Blob Space", "value": oci_blob_space + " GiB"},
-            {"attribute": "Total Space Used", "value": total_space + " GiB"},
-            {"attribute": "SINGULARITY_CACHEDIR", "value": s_cache},
-            {"attribute": "APPTAINER_CACHEDIR", "value": a_cache}
-        ]
+        data = {
+            "hostname": self.hostname,
+            "Container_Files": container_files,
+            "Container_Space": container_space + " MiB",
+            "OCI_Blob_Files": oci_blob_files,
+            "OCI_Blob_Space": oci_blob_space + " GiB",
+            "Total_Space_Used": total_space + " GiB",
+            "SINGULARITY_CACHEDIR": s_cache,
+            "APPTAINER_CACHEDIR": a_cache
+        }
         return data
 
 
@@ -472,6 +471,37 @@ class Apptainer:
         command = f"apptainer shell instance://{name}"
         stdout, stderr = self.system(command)
         return stdout, stderr
+    
+    def download(self, name=None, url=None):
+        """
+        Downloads an image from a URL.
+
+        Args:
+            name (str): Name of the image.
+            url (str): URL of the image.
+
+        Returns:
+            None
+        """
+        command = f"apptainer pull {name} {url}"
+        r = os.system(command)
+        self.save()
+        assert r == 0
+
+    def delete(self, name):
+        """
+        Deletes the specified instance.
+
+        Args:
+            name (str): Name of the instance.
+
+        Returns:
+            tuple: A tuple containing the stdout and stderr of the command.
+        """
+        r = Shell.rm(name)
+        self.load_location_from_db()
+        return r
+
 
 def main():
     arguments = ' '.join(sys.argv[1:])

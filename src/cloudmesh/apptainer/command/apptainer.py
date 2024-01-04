@@ -21,6 +21,7 @@ class ApptainerCommand(PluginCommand):
         ::
 
           Usage:
+                apptainer download NAME URL
                 apptainer inspect NAME
                 apptainer list [--detail] [--output=OUTPUT]
                 apptainer info
@@ -40,6 +41,8 @@ class ApptainerCommand(PluginCommand):
                       PARAMETER  a parameterized parameter of the form "a[0-3],a5"
                       OPTIONS   Options passed to the start command
                       IMAGE     The name of the image to be used
+                      NAME      The name of the apptainer
+                      URL       The URL of the file to be downloaded
 
                   Options:
                         --dir=DIRECTORY  sets the the directory of the a list of aptainers
@@ -51,7 +54,6 @@ class ApptainerCommand(PluginCommand):
                         --detail         shows more details [default: False]    
                         
                   Description:
-
                   
                     cms apptainer list
                         lists the apptainers in the specified directory 
@@ -86,21 +88,21 @@ class ApptainerCommand(PluginCommand):
                                     location: ../rivanna/images/cloudmesh-tensorflow.sif
                                     hostname: udc-aj34-33
                                 - name: haproxy_latest.sif
-                                    size: 45.6 MB
-                                    path: ../rivanna/images
-                                    location: ../rivanna/images/haproxy_latest.sif
-                                    hostname: udc-aj34-33
-                                instances:
-                                - instance: tfs
-                                    pid: 337625
-                                    img: /scratch/$USER/cm/5/rivanna/images/cloudmesh-tfs.sif
-                                    ip: ''
-                                    logErrPath: /home/$USER/.apptainer/instances/logs/udc-aj34-33/$USER/tfs.err
-                                    logOutPath: /home/$USER/.apptainer/instances/logs/udc-aj34-33/$USER/tfs.out
+                                                                size: 45.6 MB
+                                                                path: ../rivanna/images
+                                                                location: ../rivanna/images/haproxy_latest.sif
+                                                                hostname: udc-aj34-33
+                                                            instances:
+                                                            - instance: tfs
+                                                                pid: 337625
+                                                                img: /scratch/$USER/cm/5/rivanna/images/cloudmesh-tfs.sif
+                                                                ip: ''
+                                                                logErrPath: /home/$USER/.apptainer/instances/logs/udc-aj34-33/$USER/tfs.err
+                                                                logOutPath: /home/$USER/.apptainer/instances/logs/udc-aj34-33/$USER/tfs.out
 
 
 
-        """
+                                    """
 
 
         #variables = Variables()
@@ -177,5 +179,13 @@ class ApptainerCommand(PluginCommand):
             directory = arguments.DIRECTORY
             r = app.images(directory=directory)
             print(tabulate(r, headers="keys", tablefmt="simple_grid", showindex="always"))
+        
+        elif arguments.download:
+            name = arguments.NAME
+            if not name.endswith(".sif"):
+                name += ".sif"
+            print (f"NAME>{name}<")
+
+            app.download(name=name, url=arguments.URL)
 
         return ""
