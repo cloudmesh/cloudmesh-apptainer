@@ -16,64 +16,90 @@
 [![Windows](https://img.shields.io/badge/OS-Windows-blue.svg)](https://www.microsoft.com/windows)
 
 
-* https://github.com/cloudmesh/cloudmesh.cmd5
+The cloudmesh command apptainer command lest you more easily manage apptainers for applicatio oriented work. The main contribution are:
 
-The cloudmesh command apptainer is a sample command so you can see how easy it is to generate a command. You can clone is and replace the "apptainer" with the command name you like.
+1. It includes a Python API so containers can be managed directly from python instead of a commandline tool
+2. It includesa focussed commandline tool with a selected number of features to more easily start, stop, list and execute commands in a container. 
+3. It includes a number of enhanced features to show case locations and sises of the images and instances.
+4. A simple yaml database is automatically created when using the API or the commandline tool so that a record is preserved for long running containers. THe record includes also a hostname, making it possible to use this dattabase to manage containers on remote hosts.
 
-However there is an easier way, with 
+TODO: the remote host feature to start stop containers is not yet fully implemented.
 
-    pip install cloudmesh-sys
+To sinstall it uyou can use 
 
-Now you need to clone the cloudmesh-common repo
+    pip install cloudmesh-apptainer
 
-    git clone ...
+To develop you will need the source code 
 
-Next you can generate comands in directories with 
+    git clone https://github.com/cloudmesh/cloudmesh-apptainer.git
+    git clone https://github.com/cloudmesh/cloudmesh-common.git
 
-    cms sys generate xyz
+Next you can generate python editable sources with
 
-which will create a directory cloudmesh-xyz, where the new command xyz is defined.
-You can cd into that command and install it with 
+    make pip
+
+and local wheels with
 
     make local
 
+To update the makefile you can say 
+
+    make readme
+    
+For more information see the makefile
 
 ## Manual Page
 
 <!-- START-MANUAL -->
 ```
 Command apptainer
-===========
+=================
 
 ::
 
   Usage:
-        apptainer --file=FILE
-        apptainer list
-        apptainer [--parameter=PARAMETER] [--experiment=EXPERIMENT] [COMMAND...]
+        apptainer inspect NAME
+        apptainer list [--output=OUTPUT]
+        apptainer info
+        apptainer --dir=DIRECTORY
+        apptainer --add=SIF
+        apptainer cache
+        apptainer images [DIRECTORY]
+        apptainer start NAME IMAGE [--home=PWD] [--gpu=GPU] [OPTIONS] [--dryrun]
+        apptainer stop NAME 
+        apptainer shell NAME
+        apptainer exec NAME COMMAND
 
-  This command does some useful things.
+          This command can be used to manage apptainers.
 
-  Arguments:
-      FILE   a file name
-      PARAMETER  a parameterized parameter of the form "a[0-3],a5"
+          Arguments:
+              FILE   a file name
+              PARAMETER  a parameterized parameter of the form "a[0-3],a5"
+              OPTIONS   Options passed to the start command
+              IMAGE     The name of the image to be used
 
-  Options:
-      -f      specify the file
+          Options:
+                --dir=DIRECTORY  sets the the directory of the a list of aptainers
+                --add=SIF        adds a sif file to the list of apptainers
+                --image=IMAGE    sets the image to be used
+                --home=PWD       sets the home directory of the apptainer
+                --gpu=GPU        sets the gpu to be used
+                --output=OUTPUT  the format of the output [default: table]
 
-  Description:
+          Description:
 
-    > cms apptainer --parameter="a[1-2,5],a10"
-    >    example on how to use Parameter.expand. See source code at
-    >      https://github.com/cloudmesh/cloudmesh-apptainer/blob/main/cloudmesh/apptainer/command/apptainer.py
-    >    prints the expanded parameter as a list
-    >    ['a1', 'a2', 'a3', 'a4', 'a5', 'a10']
 
-    > apptainer exp --experiment=a=b,c=d
-    > example on how to use Parameter.arguments_to_dict. See source code at
-    >      https://github.com/cloudmesh/cloudmesh-apptainer/blob/main/cloudmesh/apptainer/command/apptainer.py
-    > prints the parameter as dict
-    >   {'a': 'b', 'c': 'd'}
+            cms apptainer list
+                lists the apptainers in the specified directory 
+                by default the directory is 
 
+            cms apptainer --dir=DIRECTORY
+                sets the default apptainer directory in the cms variable apptainer_dir
+
+            cms apptainer --add=SIF
+                adds a sif file to the list of apptainers
+
+            cms apptainer cache
+                lists the cached apptainers
 ```
 <!-- STOP-MANUAL -->
