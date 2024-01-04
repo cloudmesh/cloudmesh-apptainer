@@ -22,7 +22,8 @@ class ApptainerCommand(PluginCommand):
 
           Usage:
                 apptainer inspect NAME
-                apptainer list
+                apptainer list [--output=OUTPUT]
+                apptainer info
                 apptainer --dir=DIRECTORY
                 apptainer --add=SIF
                 apptainer cache
@@ -46,6 +47,7 @@ class ApptainerCommand(PluginCommand):
                         --image=IMAGE    sets the image to be used
                         --home=PWD       sets the home directory of the apptainer
                         --gpu=GPU        sets the gpu to be used
+                        --output=OUTPUT  the format of the output [default: table]
                 
                   Description:
 
@@ -69,7 +71,7 @@ class ApptainerCommand(PluginCommand):
         variables = Variables()
         variables["apptainer_dir"] = True
 
-        # map_parameters(arguments, "dir", "add")
+        map_parameters(arguments, "output")
 
         
         # arguments = Parameter.parse(
@@ -84,13 +86,25 @@ class ApptainerCommand(PluginCommand):
         if arguments["--dir"]:
             print("option dir")
 
-        elif arguments["list"]:
-            print("option list")
-            out = app.list()
+        elif arguments.info:
+            out = app.info()
             app.save()
-            print (out)
             r = readfile("apptainer.yaml")
             print (r)
+
+        elif arguments.list:
+            out = app.list()
+            app.save()
+            r = readfile("apptainer.yaml")
+            print (r)
+            prefix = app.prefix
+            data = app.db[f"{prefix}.instances"]
+            print (data)
+            # if arguments.output == "table":
+            #     print(tabulate(data, headers="keys", tablefmt="simple_grid", showindex="always"))
+            # else:
+            print(Printer.write(data, order=None, output=arguments.output))
+
 
         elif arguments.cache:
 

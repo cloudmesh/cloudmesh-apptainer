@@ -153,7 +153,22 @@ class Apptainer:
         stdout, stderr = process.communicate()
         return stdout, stderr
 
-    def list(self, logs=False, verbose=True):
+    def list(self, output=None, verbose=False):
+        """
+        Lists the instances.
+
+        Args:
+            output (str): Output format. Supported values: "json".
+            verbose (bool): Print the command before executing.
+
+        Returns:
+            tuple: A tuple containing the stdout and stderr of the command.
+        """
+        r = self.info()
+        return r
+    
+
+    def info(self, logs=False, verbose=False):
         """
         Lists the instances.
 
@@ -173,6 +188,7 @@ class Apptainer:
         stdout, stderr = self._run("list", command, register=False)
         
         output_dict = json.loads(stdout)
+        self.db[f"{self.prefix}.instances"] = output_dict["instances"]
         
         return output_dict
     
@@ -299,7 +315,7 @@ class Apptainer:
 
             assert "no instance found" not in out
 
-            out = self.list()
+            out = self.info()
             assert name not in out
 
         if home:
@@ -389,7 +405,10 @@ class Apptainer:
         Args:
             name (str): The container in which to execute the command.
             command (str): The command to execute.
-            bind (List[Dict[str, str]]): A list of dictionaries, each containing 'src', 'dest', and 'opts'. 'src' and 'dest' are outside and inside paths. If 'dest' is not given, it is set equal to 'src'. Mount options ('opts') may be specified as 'ro' (read-only) or 'rw' (read/write, which is the default). Multiple bind paths can be given by a comma separated list.
+            bind (List[Dict[str, str]]): A list of dictionaries, each containing 'src', 'dest', and 'opts'. 'src' and 
+                                        'dest' are outside and inside paths. If 'dest' is not given, it is set equal to 'src'. 
+                                        Mount options ('opts') may be specified as 'ro' (read-only) or 'rw' (read/write, which is the default). 
+                                        Multiple bind paths can be given by a comma separated list.
             nv (bool): A boolean to enable or disable Nvidia support.
             home (str): A string specifying the home directory.
 
@@ -404,7 +423,8 @@ class Apptainer:
             exec("my_container", "ls")
 
             # Execute a command in a container with bind paths, Nvidia support, and a specified home directory
-            exec("my_container", "ls", bind=[{"src": "/path1", "dest": "/path2", "opts": "ro"}, {"src": "/path3", "dest": "/path4", "opts": "rw"}], nv=True, home="/home/user")
+            exec("my_container", "ls", bind=[{"src": "/path1", "dest": "/path2", "opts": "ro"}, 
+            {"src": "/path3", "dest": "/path4", "opts": "rw"}], nv=True, home="/home/user")
         
         """
         # Construct the command
