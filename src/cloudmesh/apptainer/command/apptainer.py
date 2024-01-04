@@ -22,7 +22,7 @@ class ApptainerCommand(PluginCommand):
 
           Usage:
                 apptainer inspect NAME
-                apptainer list [--output=OUTPUT]
+                apptainer list [--detail] [--output=OUTPUT]
                 apptainer info
                 apptainer --dir=DIRECTORY
                 apptainer --add=SIF
@@ -48,7 +48,8 @@ class ApptainerCommand(PluginCommand):
                         --home=PWD       sets the home directory of the apptainer
                         --gpu=GPU        sets the GPU to be used
                         --output=OUTPUT  the format of the output [default: table]
-                
+                        --detail         shows more details [default: False]    
+                        
                   Description:
 
                   
@@ -70,8 +71,6 @@ class ApptainerCommand(PluginCommand):
 
                         cloudmesh:
                             apptainer:
-                                udc-aj34-33:
-                                hostname: udc-aj34-33
                                 location:
                                 - ~/.cloudmesh/apptainer
                                 - ../rivanna/images
@@ -129,6 +128,9 @@ class ApptainerCommand(PluginCommand):
             print (r)
 
         elif arguments.list:
+
+            detail = arguments["--detail"]
+
             out = app.list()
             app.save()
             r = readfile("apptainer.yaml")
@@ -137,8 +139,14 @@ class ApptainerCommand(PluginCommand):
             # if arguments.output == "table":
             #     print(tabulate(data, headers="keys", tablefmt="simple_grid", showindex="always"))
             # else:
-            print(Printer.write(data, order=None, output=arguments.output))
-
+            if detail:
+                print(Printer.write(data, order=None, output=arguments.output))
+            else:
+                for entry in data:
+                    entry.pop("logErrPath")
+                    entry.pop("logOutPath")
+                # print(Printer.write(data, order=None, output=arguments.output))
+                print(tabulate(data, headers="keys", tablefmt="simple_grid", showindex="always"))
 
         elif arguments.cache:
 

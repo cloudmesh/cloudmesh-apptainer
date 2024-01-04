@@ -25,6 +25,7 @@ class Apptainer:
         except:
             self.hostname = "localhost"
         self.prefix = f"cloudmesh.apptainer.{self.hostname}"
+        self.prefix = f"cloudmesh.apptainer"
 
         self.db = YamlDB(filename="apptainer.yaml")
 
@@ -48,9 +49,18 @@ class Apptainer:
     def load(self):
         if os.path.isfile("apptainer.yaml"):
             prefix = self.prefix
-            self.hostname = self.db[f"{prefix}.hostname"]
-            self.location = self.db[f"{prefix}.location"]
-            self.apptainers = self.db[f"{prefix}.apptainers"]
+            try:
+                self.hostname = self.db[f"{prefix}.hostname"]
+            except:
+                self.hostname = "localhost"
+            try:
+                self.location = self.db[f"{prefix}.location"]
+            except:
+                self.location = ["images"]
+            try:
+                self.apptainers = self.db[f"{prefix}.apptainers"]
+            except:
+                self.apptainers = []
         else:
             Console.warning("apptainer.yaml does not exist")
 
@@ -102,17 +112,17 @@ class Apptainer:
         self.load_location_from_db()
 
     def images(self, directory=None):
-            """
-            Retrieves a list of images from the apptainer.yaml file.
-            
-            Args:
-                directory (str): The directory to search for images. If not specified, all images will be retrieved.
-            
-            Returns:
-                list: A list of images found in the specified directory.
-            """
-            all = self.load_location_from_db()
-            return self.apptainers
+        """
+        Retrieves a list of images from the apptainer.yaml file.
+        
+        Args:
+            directory (str): The directory to search for images. If not specified, all images will be retrieved.
+        
+        Returns:
+            list: A list of images found in the specified directory.
+        """
+        all = self.load_location_from_db()
+        return self.apptainers
 
 
     def ps(self):
@@ -124,7 +134,7 @@ class Apptainer:
         """
         return self.processes
 
-    def _run(self, name, command, verbose=False, register=None):
+    def system(self, command=None, name=None, verbose=False, register=False):
         """
         Runs a command.
 
@@ -185,7 +195,7 @@ class Apptainer:
             command += " --logs"
         if verbose:
             banner(command)
-        stdout, stderr = self._run("list", command, register=False)
+        stdout, stderr = self.system(command)
         
         output_dict = json.loads(stdout)
         self.db[f"{self.prefix}.instances"] = output_dict["instances"]
@@ -227,7 +237,7 @@ class Apptainer:
         """
         _name,location = self.find_image(name)
         command = f"apptainer inspect --json {location}"
-        stdout, stderr = self._run("inspect", command, register=False)
+        stdout, stderr = self.system("inspect", command, register=False)
 
         data = json.loads(stdout)
 
@@ -296,7 +306,7 @@ class Apptainer:
             raise ValueError(f"Output format {output} not supported")
         if verbose:
             print(command)
-        stdout, stderr = self._run(command)
+        stdout, stderr = self.system(command, register=False)
         return stdout, stderr
 
     def start(self, name=None, image=None, gpu=None, home=None, clean=True, options=None, dryrun=False):
@@ -342,7 +352,7 @@ class Apptainer:
             print("DRYRUN:", command)
         else:
             banner(command)
-            stdout, stderr = self._run(name, command, register=True)
+            stdout, stderr = self.system(name, command, register=True)
         return stdout, stderr
     
 
@@ -394,11 +404,11 @@ class Apptainer:
             command += " --all"
         else :
             command += f" {name}"
-        stdout, stderr = self._run("stop", command, register=False)
+        stdout, stderr = self.system("stop", command, register=False)
         return stdout, stderr
 
    
-    def exec(self, name, command, bind=None, nv=False, home=None):
+    def exec(self, name=None, command=None, bind=None, nv=False, home=None, verbose=False):
         """
         Execute a command in a container with optional bind paths, Nvidia support, and a specified home directory.
 
@@ -442,8 +452,10 @@ class Apptainer:
         # Add home directory
         if home:
             cmd += f" --home {home}"
+        if verbose:
+            print(cmd)
 
-        stdout, stderr = self._run(cmd)
+        stdout, stderr = self.system(name="exec", command=cmd, register=False)
         return stdout, stderr
     
 
@@ -458,7 +470,7 @@ class Apptainer:
             tuple: A tuple containing the stdout and stderr of the command.
         """
         command = f"apptainer shell instance://{name}"
-        stdout, stderr = self._run(command)
+        stdout, stderr = self.system(command)
         return stdout, stderr
 
 def main():

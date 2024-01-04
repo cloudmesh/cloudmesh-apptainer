@@ -108,8 +108,6 @@ Command apptainer
 
                 cloudmesh:
                     apptainer:
-                        udc-aj34-33:
-                        hostname: udc-aj34-33
                         location:
                         - ~/.cloudmesh/apptainer
                         - ../rivanna/images
