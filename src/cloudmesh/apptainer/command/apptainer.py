@@ -132,10 +132,8 @@ class ApptainerCommand(PluginCommand):
             out = app.list()
             app.save()
             r = readfile("apptainer.yaml")
-            print (r)
             prefix = app.prefix
             data = app.db[f"{prefix}.instances"]
-            print (data)
             # if arguments.output == "table":
             #     print(tabulate(data, headers="keys", tablefmt="simple_grid", showindex="always"))
             # else:

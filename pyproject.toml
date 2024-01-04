@@ -49,6 +49,7 @@ classifiers = [
 ]
 
 dependencies = [
+    "yamldb",
     "cloudmesh-cmd5",
 ]
 
@@ -62,3 +63,6 @@ Changelog = "https://github.com/cloudmesh/cloudmesh-apptainer/blob/main/CHANGELO
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["cloudmesh.apptainer", "cloudmesh.apptainer.*"]
+
+[project.scripts]
+cma = "cloudmesh.apptainer.apptainer:main"

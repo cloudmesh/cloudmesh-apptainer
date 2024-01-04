@@ -462,10 +462,8 @@ class Apptainer:
         return stdout, stderr
 
 def main():
-    print("OOOO")
-    print (sys.argv)
-    #os.system(f"cms apptainer {sys.argv}")
-    os.system("ls")
+    arguments = ' '.join(sys.argv[1:])
+    os.system(f"cms apptainer {arguments}")
     
 if __name__ == "__main__":
     main()
