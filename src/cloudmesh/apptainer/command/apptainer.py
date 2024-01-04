@@ -46,7 +46,7 @@ class ApptainerCommand(PluginCommand):
                         --add=SIF        adds a sif file to the list of apptainers
                         --image=IMAGE    sets the image to be used
                         --home=PWD       sets the home directory of the apptainer
-                        --gpu=GPU        sets the gpu to be used
+                        --gpu=GPU        sets the GPU to be used
                         --output=OUTPUT  the format of the output [default: table]
                 
                   Description:
@@ -64,6 +64,42 @@ class ApptainerCommand(PluginCommand):
                     
                     cms apptainer cache
                         lists the cached apptainers
+
+                    cms apptainer info
+                        prints information contained in the apptainer.yaml file. An example is given next
+
+                        cloudmesh:
+                            apptainer:
+                                udc-aj34-33:
+                                hostname: udc-aj34-33
+                                location:
+                                - ~/.cloudmesh/apptainer
+                                - ../rivanna/images
+                                apptainers:
+                                - name: cloudmesh-tfs.sif
+                                    size: 1.5 GB
+                                    path: ../rivanna/images
+                                    location: ../rivanna/images/cloudmesh-tfs.sif
+                                    hostname: udc-aj34-33
+                                - name: cloudmesh-tensorflow.sif
+                                    size: 7.4 GB
+                                    path: ../rivanna/images
+                                    location: ../rivanna/images/cloudmesh-tensorflow.sif
+                                    hostname: udc-aj34-33
+                                - name: haproxy_latest.sif
+                                    size: 45.6 MB
+                                    path: ../rivanna/images
+                                    location: ../rivanna/images/haproxy_latest.sif
+                                    hostname: udc-aj34-33
+                                instances:
+                                - instance: tfs
+                                    pid: 337625
+                                    img: /scratch/$USER/cm/5/rivanna/images/cloudmesh-tfs.sif
+                                    ip: ''
+                                    logErrPath: /home/$USER/.apptainer/instances/logs/udc-aj34-33/$USER/tfs.err
+                                    logOutPath: /home/$USER/.apptainer/instances/logs/udc-aj34-33/$USER/tfs.out
+
+
 
         """
 
