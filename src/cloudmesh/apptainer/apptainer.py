@@ -10,27 +10,59 @@ from cloudmesh.common.debug import VERBOSE
 import humanize
 import json
 import json
-
+from yamldb import YamlDB
+from cloudmesh.common.console import Console
 
 
 class Apptainer:
     def __init__(self):
-        self.processes = {}
+        self.processes = []
         self.location = []
         self.apptainers = []
         self.variables = Variables()
-        self.load_location_from_variables()
+        try:
+            self.hostname = os.environ.get("HOSTNAME") or os.uname()[1] 
+        except:
+            self.hostname = "localhost"
+        self.prefix = f"cloudmesh.apptainer.{self.hostname}"
+
+        self.db = YamlDB(filename="apptainer.yaml")
+
+        self.load_location_from_db()
+
+        self.save()
+
+    def get_db(self, key):
+        return self.db[f"{self.prefix}.{key}"]
+
+    def save(self):
+        try:
+            prefix = self.prefix
+            self.db[f"{prefix}.hostname"] = self.hostname
+            self.db[f"{prefix}.location"] = self.location
+            self.db[f"{prefix}.apptainers"] = self.apptainers 
+            self.db.save()  
+        except:
+            Console.error("apptainer.yaml could not be written")
+
+    def load(self):
+        if os.path.isfile("apptainer.yaml"):
+            prefix = self.prefix
+            self.hostname = self.db[f"{prefix}.hostname"]
+            self.location = self.db[f"{prefix}.location"]
+            self.apptainers = self.db[f"{prefix}.apptainers"]
+        else:
+            Console.warning("apptainer.yaml does not exist")
 
     
 
-    def load_location_from_variables(self):
+
+    def load_location_from_db(self):
             """
             Load the location of apptainers from the cloudmesh variable `apptainers` which is a coma separated string of dirs and sif files.
             """
-            if "apptainers" not in self.variables:
-                self.variables["apptainers"] = "~/.cloudmesh/apptainer"        
-            self.location = Parameter.expand(self.variables["apptainers"])
-
+            self.load()
+   
             self.apptainers = []
             for entry in self.location:
                 entry = path_expand(entry)
@@ -46,19 +78,20 @@ class Apptainer:
                                 self.apptainers.append({"name": name, 
                                                         "size": size, 
                                                         "path": entry, 
-                                                        "location": location})  # Fix: Removed unnecessary double quotes
-                else:
-                    if entry.endswith(".sif"):
+                                                        "location": location,
+                                                        "hostname": self.hostname}
+                                                        )  # Fix: Removed unnecessary double quotes
+                elif entry.endswith(".sif"):
+                    if os.path.isfile(entry):
+                        self.apptainers.append({"name": os.path.basename(entry), "size": size, "path": os.path.dirname(entry), "location": entry})
                         try:
                             size = humanize.naturalsize(os.path.getsize(entry))
                         except:
                             size = "unknown"
-                        if os.path.isfile(entry):
-                            self.apptainers.append({"name": os.path.basename(entry), "size": size, "path": os.path.dirname(entry), "location": entry})
-                
+                        
     def add_location(self, path):
         """
-        Adds a new location to the list of apptainer locations into the cloudmesh variable `apptainers`.
+        Adds a location to the Apptainer object.
 
         Parameters:
         path (str): The path of the location to be added.
@@ -66,15 +99,20 @@ class Apptainer:
         Returns:
         None
         """
-        self.variables["apptainers"] = self.variables["apptainers"] + "," + path
-        self.load_location_from_variables()
+        self.load_location_from_db()
 
-    def images(self):
-        """
-        retusns the lists the images in the cloudmesh variable `apptainers`.
-
-        """
-        return self.apptainers
+    def images(self, directory=None):
+            """
+            Retrieves a list of images from the apptainer.yaml file.
+            
+            Args:
+                directory (str): The directory to search for images. If not specified, all images will be retrieved.
+            
+            Returns:
+                list: A list of images found in the specified directory.
+            """
+            all = self.load_location_from_db()
+            return self.apptainers
 
 
     def ps(self):
@@ -181,6 +219,7 @@ class Apptainer:
         result = []
         result.append({'attribute': 'name','value':  _name})
         result.append({'attribute': 'location','value':  location})
+        result.append({"attribute": "hostname", "value": self.hostname})
         result += [{'attribute': key, 'value': value} for key, value in labels.items()]        
         result.append(        {'attribute': 'type','value':  data['type']})
         size = humanize.naturalsize(os.path.getsize(location))
@@ -211,6 +250,7 @@ class Apptainer:
             a_cache = None
 
         data = [
+            {"attribute": "hostname", "value": self.hostname},
             {"attribute": "Container Files", "value": container_files},
             {"attribute": "Container Space", "value": container_space + " MiB"},
             {"attribute": "OCI Blob Files", "value": oci_blob_files},
@@ -243,20 +283,14 @@ class Apptainer:
         stdout, stderr = self._run(command)
         return stdout, stderr
 
-    def start(self, path, name=None, gpu=None, home=None, clean=True, args=[], dryrun=False):
-        """
-        Starts a new instance.
-
-        Args:
-            path (str): Path to the instance.
-            name (str): Name of the instance.
-            args (list): Additional arguments for the instance.
-
-        Returns:
-            tuple: A tuple containing the stdout and stderr of the command.
-        """
+    def start(self, name=None, image=None, gpu=None, home=None, clean=True, options=None, dryrun=False):
         if name is None:
             raise ValueError("Name of the instance must be specified")
+        if image is None:
+            raise ValueError("Image of the instance must be specified")
+        
+        # check if name is not alrady in use
+
         if clean:
             try:
                 out,err = self.stop(name=name)
@@ -265,7 +299,7 @@ class Apptainer:
 
             assert "no instance found" not in out
 
-            out,err = self.list()
+            out = self.list()
             assert name not in out
 
         if home:
@@ -280,15 +314,19 @@ class Apptainer:
         else:
             gpu_visible_devices = f"CUDA_VISIBLE_DEVICES={gpu} "
 
-        _name,path = self.find_image(path)
 
-        command = gpu_visible_devices + f"apptainer instance start -nv {home} {path} {_name}"
-        if args:
-            command += " " + " ".join(args)
+        _name,path = self.find_image(image)
+
+        banner(f"Start {name} {path} {home}")
+
+        command = gpu_visible_devices + f"apptainer instance start --nv {home} {path} {name}"
+        if options:
+            command += " " + " ".join(options)
         if dryrun:
             print("DRYRUN:", command)
         else:
-            stdout, stderr = self._run(command, register=True)
+            banner(command)
+            stdout, stderr = self._run(name, command, register=True)
         return stdout, stderr
     
 
@@ -340,7 +378,7 @@ class Apptainer:
             command += " --all"
         else :
             command += f" {name}"
-        stdout, stderr = self._run(command, register=False)
+        stdout, stderr = self._run("stop", command, register=False)
         return stdout, stderr
 
    
@@ -405,7 +443,9 @@ class Apptainer:
 
 def main():
     print("OOOO")
-    os.system(f"cms apptainer {sys.arg}")
-
+    print (sys.argv)
+    #os.system(f"cms apptainer {sys.argv}")
+    os.system("ls")
+    
 if __name__ == "__main__":
     main()
