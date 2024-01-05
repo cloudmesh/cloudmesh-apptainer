@@ -257,11 +257,15 @@ class Apptainer:
 
         #output = "There are 1 container file(s) using 43.48 MiB and 66 oci blob file(s) using 7.01 GiB of space\nTotal space used: 7.05 GiB"
 
+        #another_possible_output = "There are 1 container file(s) using 469.52 MiB and 14 oci blob file(s) using 510.59 MiB of space
+        #Total space used: 980.10 MiB
+        #"
+
         container_files = re.search(r"There are (\d+) container file", result).group(1)
-        container_space = re.search(r"using ([\d.]+) MiB", result).group(1)
+        container_space = re.search(r"using ([\d.]+) (MiB|GiB)", result).groups()
         oci_blob_files = re.search(r"(\d+) oci blob file", result).group(1)
-        oci_blob_space = re.search(r"using ([\d.]+) GiB", result).group(1)
-        total_space = re.search(r"Total space used: ([\d.]+) GiB", result).group(1)
+        oci_blob_space = re.search(r"using ([\d.]+) (MiB|GiB)", result).groups()
+        total_space = re.search(r"Total space used: ([\d.]+) (MiB|GiB)", result).groups()
 
         if 'SINGULARITY_CACHEDIR' in os.environ:
             s_cache = os.environ['SINGULARITY_CACHEDIR']
@@ -275,10 +279,10 @@ class Apptainer:
         data = {
             "hostname": self.hostname,
             "Container_Files": container_files,
-            "Container_Space": container_space + " MiB",
+            "Container_Space": " ".join(container_space),
             "OCI_Blob_Files": oci_blob_files,
-            "OCI_Blob_Space": oci_blob_space + " GiB",
-            "Total_Space_Used": total_space + " GiB",
+            "OCI_Blob_Space": " ".join(oci_blob_space),
+            "Total_Space_Used": " ".join(total_space),
             "SINGULARITY_CACHEDIR": s_cache,
             "APPTAINER_CACHEDIR": a_cache
         }
