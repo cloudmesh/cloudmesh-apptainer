@@ -142,7 +142,7 @@ class Apptainer:
         Returns:
             tuple: A tuple containing the stdout and stderr of the command.
         """
-        if verbose:
+        if verbose: 
             print(command)
         process = subprocess.Popen(
             command,
@@ -349,7 +349,7 @@ class Apptainer:
             print("DRYRUN:", command)
         else:
             banner(command)
-            stdout, stderr = self.system(name, command, register=True)
+            stdout, stderr = self.system(name=name, command=command, register=True)
         return stdout, stderr
     
 
