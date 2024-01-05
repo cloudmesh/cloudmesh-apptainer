@@ -30,38 +30,38 @@ class TestConfig:
         assert stdout.strip() == "Hello, World!"
         assert stderr.strip() == ""
     
-    # def test_help(self):
-    #     HEADING()
-    #     Benchmark.Start()
-    #     result = Shell.execute("cma help", shell=True)
-    #     Benchmark.Stop()
-    #     VERBOSE(result)
+    def test_help(self):
+        HEADING()
+        Benchmark.Start()
+        result = Shell.execute("cma help", shell=True)
+        Benchmark.Stop()
+        VERBOSE(result)
 
-    #     assert "apptainer info" in result
-    #     assert "apptainer download NAME URL" in result
+        assert "apptainer info" in result
+        assert "apptainer download NAME URL" in result
 
-    # def test_download(self):
-    #     HEADING()
-    #     Benchmark.Start()
-    #     try:
-    #         apptainer.delete("dot-tfs.sif")
-    #     except:
-    #         pass
-    #     apptainer.download("dot-tfs.sif", "docker://tensorflow/tensorflow:latest")
-    #     Benchmark.Stop()
+    def test_download(self):
+        HEADING()
+        Benchmark.Start()
+        try:
+            apptainer.delete("dot-tfs.sif")
+        except:
+            pass
+        apptainer.download("dot-tfs.sif", "docker://tensorflow/tensorflow:latest")
+        Benchmark.Stop()
 
-    #     assert os.path.exists("dot-tfs.sif")
+        assert os.path.exists("dot-tfs.sif")
 
-    # def test_download_in_images_dir(self):
-    #     HEADING()
-    #     Benchmark.Start()
-    #     Shell.mkdir("images")
-    #     try:
-    #         apptainer.delete("images/images-tfs.sif")
-    #     except:
-    #         pass
-    #     apptainer.download("images/images-tfs.sif", "docker://tensorflow/tensorflow:latest")
-    #     Benchmark.Stop()
+    def test_download_in_images_dir(self):
+        HEADING()
+        Benchmark.Start()
+        Shell.mkdir("images")
+        try:
+            apptainer.delete("images/images-tfs.sif")
+        except:
+            pass
+        apptainer.download("images/images-tfs.sif", "docker://tensorflow/tensorflow:latest")
+        Benchmark.Stop()
 
         assert os.path.exists("images/images-tfs.sif")
 
@@ -124,6 +124,12 @@ class TestConfig:
         assert apptainer.location[1] == "more-images"
 
 
+    def test_benchmark(self):
+        HEADING()
+        Benchmark.print(csv=True, sysinfo=False, tag="cmd5")
+
+# TESTE DONE TILL HERE
+        
 class g:
     def test_info(self):
         HEADING()
@@ -184,7 +190,4 @@ class a:
         Benchmark.Stop()
 
 
-    def test_benchmark(self):
-        HEADING()
-        Benchmark.print(csv=True, sysinfo=False, tag="cmd5")
 
