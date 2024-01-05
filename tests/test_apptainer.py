@@ -23,6 +23,16 @@ def print_table(data):
 @pytest.mark.incremental
 class TestConfig:
 
+    def test_apptainer_cmd(self):
+        HEADING()
+        Benchmark.Start()
+        r = Shell.run("apptainer help")
+        Benchmark.Stop()
+
+        if "not found" in r:
+            assert False
+            print("Please do module load apptainer")
+
     def test_system(self):
         HEADING()
         Benchmark.Start()

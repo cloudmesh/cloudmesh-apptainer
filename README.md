@@ -136,3 +136,11 @@ Command apptainer
                             logOutPath: /home/$USER/.apptainer/instances/logs/udc-aj34-33/$USER/tfs.out
 ```
 <!-- STOP-MANUAL -->
+
+## Test
+
+It may be necessary to export your path to get `cma` command
+
+```bash
+PATH=$PATH:$HOME/.local/bin
+```
