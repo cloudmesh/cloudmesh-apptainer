@@ -153,15 +153,15 @@ class ApptainerCommand(PluginCommand):
         elif arguments.cache:
 
             data = app.cache()
-            print(tabulate(data, headers="keys", tablefmt="simple_grid", showindex="always"))
-
+            print(Printer.attribute(data))
+            
         elif arguments["--add"]:
             print("option add")
             app.add_location(arguments["--add"])
 
         elif arguments.inspect:
-            r = app.inspect(arguments.NAME)
-            print(tabulate(r, headers="keys", tablefmt="simple_grid", showindex="always"))
+            data = app.inspect(arguments.NAME)
+            print(Printer.attribute(data))
 
         elif arguments.start:
             r = app.start(name=arguments.NAME, image=arguments.IMAGE, home=arguments.home, gpu=arguments.gpu, options=arguments.OPTIONS)
@@ -177,8 +177,8 @@ class ApptainerCommand(PluginCommand):
 
         elif arguments.images:
             directory = arguments.DIRECTORY
-            r = app.images(directory=directory)
-            print(tabulate(r, headers="keys", tablefmt="simple_grid", showindex="always"))
+            data = app.images(directory=directory)
+            print(tabulate(data, headers="keys", tablefmt="simple_grid", showindex="always"))
         
         elif arguments.download:
             name = arguments.NAME

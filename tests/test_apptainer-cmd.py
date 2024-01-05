@@ -47,7 +47,7 @@ class TestConfig:
     def test_help(self):
         HEADING()
         Benchmark.Start()
-        result = Shell.execute("cma help", shell=True)
+        result = Shell.run("cma help")
         Benchmark.Stop()
         VERBOSE(result)
 
@@ -57,27 +57,24 @@ class TestConfig:
     def test_download(self):
         HEADING()
         Benchmark.Start()
-        try:
-            apptainer.delete("dot-tf.sif")
-        except:
-            pass
-        apptainer.download("dot-tf.sif", DOCKERHUB)
+        sif = "dot-tf.sif"
+        result = Shell.run("cma delete {sif}")
+        result = Shell.run("cma download {sif}")
         Benchmark.Stop()
 
-        assert os.path.exists("dot-tf.sif")
+        assert os.path.exists(sif)
 
     def test_download_in_images_dir(self):
         HEADING()
         Benchmark.Start()
         Shell.mkdir("images")
-        try:
-            apptainer.delete("images/images-tf.sif")
-        except:
-            pass
-        apptainer.download("images/images-tf.sif", DOCKERHUB)
+        
+        sif = "images/dot-tf.sif"
+        result = Shell.run("cma delete {sif}")
+        result = Shell.run("cma download {sif}")
         Benchmark.Stop()
 
-        assert os.path.exists("images/images-tf.sif")
+        assert os.path.exists(sif)
 
     def test_images(self):
         HEADING()
@@ -109,7 +106,6 @@ class TestConfig:
         assert len(data) > 0
         assert data["hostname"] == "localhost"
 
-
     def test_find_image(self):
         HEADING()
         Benchmark.Start()
@@ -121,7 +117,6 @@ class TestConfig:
         assert len(where) == 2
         assert where[0] == "tf.sif" or "images/tf.sif"
         assert where[1] == "images/tf.sif" or "tf.sif"
-
 
     def test_add_location(self):
         HEADING()
@@ -137,15 +132,6 @@ class TestConfig:
         assert apptainer.location[0] == "images"
         assert apptainer.location[1] == "more-images"
 
-
-    def test_benchmark(self):
-        HEADING()
-        Benchmark.print(csv=True, sysinfo=False, tag="api")
-
-# TESTE DONE TILL HERE
-
-# 1. call stop all instances
-
     def test_stop_all(self):
         HEADING()
         Benchmark.Start()
@@ -155,8 +141,6 @@ class TestConfig:
             Benchmark.Stop()
             instances = apptainer.list()
         assert len(instances) == 0
-
-# 2. tests that no instances are running
 
     def test_list_for_empty(self):
         HEADING()
@@ -168,8 +152,6 @@ class TestConfig:
         assert isinstance(output, list)
         assert len(output) == 0
 
-# 3. start an instance
-
     def test_start(self):
         HEADING()
         Benchmark.Start()
@@ -180,10 +162,6 @@ class TestConfig:
         instances = apptainer.list()
         assert len(instances) == 1
 
-
-# 4. test ps
-        
-
     def test_ps(self):
         HEADING()
         Benchmark.Start()
@@ -192,8 +170,6 @@ class TestConfig:
         Benchmark.Stop()
         assert isinstance(processes, list)
 
-
-# 5. test list
     def test_list_instance(self):
         HEADING()
         Benchmark.Start()
@@ -205,9 +181,6 @@ class TestConfig:
         assert len(output) == 1
         print (Printer.write(output))
 
-
-# 6. test info
-
     def test_info(self):
         HEADING()
         Benchmark.Start()
@@ -218,9 +191,6 @@ class TestConfig:
         assert isinstance(output_dict, dict)
         assert "instances" in output_dict
 
-# 7. test stats
-
-    
     def test_stats(self):
         HEADING()
         instance = "tf"
@@ -238,10 +208,6 @@ class TestConfig:
         assert isinstance(stdout, str)
         assert isinstance(stderr, str)
 
-
-
-# 8. test inspect
-
     def test_inspect(self):
         HEADING()
         Benchmark.Start()
@@ -253,9 +219,6 @@ class TestConfig:
         assert result['hostname'] == 'localhost'
         print(Printer.attribute(result))
 
-
-# 8. test exec ls
-
     def test_exec_ls(self):
         HEADING()
         Benchmark.Start()
@@ -264,8 +227,6 @@ class TestConfig:
         print(stdout)
         print(stderr)
         assert "dot-tf.sif" in stdout
-
-# 8. test exec tf version
 
     def test_exec_ls(self):
         HEADING()
@@ -277,9 +238,6 @@ class TestConfig:
         print(stderr)
         assert "2." in stdout
 
-
-# 9. test stop
-        
     def test_stop_tf(self):
         HEADING()
         Benchmark.Start()
@@ -290,6 +248,9 @@ class TestConfig:
             instances = apptainer.list()
         assert len(instances) == 0
 
+    def test_benchmark(self):
+        HEADING()
+        Benchmark.print(csv=True, sysinfo=False, tag="api")
 
 
 
