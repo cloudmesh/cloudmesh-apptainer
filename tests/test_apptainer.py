@@ -251,6 +251,29 @@ class TestConfig:
         print(Printer.attribute(result))
 
 
+# 8. test exec ls
+
+    def test_exec_ls(self):
+        HEADING()
+        Benchmark.Start()
+        stdout, stderr = apptainer.exec(name="tf", command="ls")
+        Benchmark.Stop()
+        print(stdout)
+        print(stderr)
+        assert "dot-tf.sif" in stdout
+
+# 8. test exec tf version
+
+    def test_exec_ls(self):
+        HEADING()
+        Benchmark.Start()
+        command = "python -c 'import tensorflow as tf; print(tf.__version__)'"
+        stdout, stderr = apptainer.exec(name="tf", command=command)
+        Benchmark.Stop()
+        print(stdout)
+        print(stderr)
+        assert "2." in stdout
+
 
 # 9. test stop
         
