@@ -15,7 +15,8 @@ import os
 
 from tabulate import tabulate
 
-DOCKERHUB="docker://tensorflow/tensorflow:latest-gpu"
+DOCKERHUB="docker://nvcr.io/nvidia/tensorflow:23.12-tf2-py3"
+# DOCKERHUB="docker://nvidia/cuda:12.2.0-devel-ubuntu20.04"
 
 apptainer = Apptainer()
 
@@ -64,8 +65,6 @@ class TestConfig:
         Benchmark.Stop()
 
         assert os.path.exists("dot-tf.sif")
-
-class a:
 
     def test_download_in_images_dir(self):
         HEADING()

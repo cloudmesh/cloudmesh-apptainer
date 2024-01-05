@@ -496,8 +496,11 @@ class Apptainer:
             None
         """
         command = f"apptainer pull {name} {url}"
-        r = os.system(command)
-        self.save()
+        if not os.path.exists(name):
+            r = os.system(command)
+            self.save()
+        else:
+            Console.warning(f"Image {name} already exists")   
         assert r == 0
 
     def delete(self, name):
