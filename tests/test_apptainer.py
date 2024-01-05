@@ -126,7 +126,7 @@ class TestConfig:
 
     def test_benchmark(self):
         HEADING()
-        Benchmark.print(csv=True, sysinfo=False, tag="cmd5")
+        Benchmark.print(csv=True, sysinfo=False, tag="api")
 
 # TESTE DONE TILL HERE
 
@@ -140,7 +140,7 @@ class TestConfig:
 # 8. test inspect
 # 9. test stop
         
-        
+
 class g:
     def test_info(self):
         HEADING()
