@@ -15,6 +15,8 @@ import os
 
 from tabulate import tabulate
 
+DOCKERHUB="docker://tensorflow/tensorflow:latest-gpu"
+
 apptainer = Apptainer()
 
 def print_table(data):
@@ -58,10 +60,12 @@ class TestConfig:
             apptainer.delete("dot-tf.sif")
         except:
             pass
-        apptainer.download("dot-tf.sif", "docker://tensorflow/tensorflow:latest")
+        apptainer.download("dot-tf.sif", DOCKERHUB)
         Benchmark.Stop()
 
         assert os.path.exists("dot-tf.sif")
+
+class a:
 
     def test_download_in_images_dir(self):
         HEADING()
@@ -71,7 +75,7 @@ class TestConfig:
             apptainer.delete("images/images-tf.sif")
         except:
             pass
-        apptainer.download("images/images-tf.sif", "docker://tensorflow/tensorflow:latest")
+        apptainer.download("images/images-tf.sif", DOCKERHUB)
         Benchmark.Stop()
 
         assert os.path.exists("images/images-tf.sif")
@@ -268,7 +272,7 @@ class TestConfig:
         HEADING()
         Benchmark.Start()
         command = "python -c 'import tensorflow as tf; print(tf.__version__)'"
-        stdout, stderr = apptainer.exec(name="tf", command=command)
+        stdout, stderr = apptainer.exec(name="tf", command=command, nv=True)
         Benchmark.Stop()
         print(stdout)
         print(stderr)
