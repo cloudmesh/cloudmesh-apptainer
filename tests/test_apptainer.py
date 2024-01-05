@@ -95,6 +95,20 @@ class TestConfig:
         assert len(data) > 0
         assert data["hostname"] == "localhost"
 
+
+    def test_find_image(self):
+        HEADING()
+        Benchmark.Start()
+        with pytest.raises(ValueError):
+            apptainer.find_image("nonexistent_image")
+        where = apptainer.find_image("tfs.sif")
+        print(where)
+        Benchmark.Stop()
+        assert len(where) == 2
+        assert where[0] == "tfs.sif"
+        assert where[1] == "images/tfs.sif"
+
+
 class h:
 
     def test_add_location(self):
@@ -139,12 +153,6 @@ class a:
         assert len(output) == 2
 
 
-    def test_find_image(self):
-        HEADING()
-        Benchmark.Start()
-        with pytest.raises(ValueError):
-            apptainer.find_image("nonexistent_image")
-        Benchmark.Stop()
 
     def test_inspect(self):
         HEADING()
