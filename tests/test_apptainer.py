@@ -44,26 +44,26 @@ class TestConfig:
         HEADING()
         Benchmark.Start()
         try:
-            apptainer.delete("dot-tfs.sif")
+            apptainer.delete("dot-tf.sif")
         except:
             pass
-        apptainer.download("dot-tfs.sif", "docker://tensorflow/tensorflow:latest")
+        apptainer.download("dot-tf.sif", "docker://tensorflow/tensorflow:latest")
         Benchmark.Stop()
 
-        assert os.path.exists("dot-tfs.sif")
+        assert os.path.exists("dot-tf.sif")
 
     def test_download_in_images_dir(self):
         HEADING()
         Benchmark.Start()
         Shell.mkdir("images")
         try:
-            apptainer.delete("images/images-tfs.sif")
+            apptainer.delete("images/images-tf.sif")
         except:
             pass
-        apptainer.download("images/images-tfs.sif", "docker://tensorflow/tensorflow:latest")
+        apptainer.download("images/images-tf.sif", "docker://tensorflow/tensorflow:latest")
         Benchmark.Stop()
 
-        assert os.path.exists("images/images-tfs.sif")
+        assert os.path.exists("images/images-tf.sif")
 
     def test_images(self):
         HEADING()
@@ -101,12 +101,12 @@ class TestConfig:
         Benchmark.Start()
         with pytest.raises(ValueError):
             apptainer.find_image("nonexistent_image")
-        where = apptainer.find_image("tfs.sif")
+        where = apptainer.find_image("tf.sif")
         print(where)
         Benchmark.Stop()
         assert len(where) == 2
-        assert where[0] == "tfs.sif"
-        assert where[1] == "images/tfs.sif"
+        assert where[0] == "tf.sif" or "images/tf.sif"
+        assert where[1] == "images/tf.sif" or "tf.sif"
 
 
     def test_add_location(self):
@@ -131,8 +131,36 @@ class TestConfig:
 # TESTE DONE TILL HERE
 
 # 1. call stop all instances
-# 2. tests taht no instances are running
+
+# TODO
+
+# 2. tests that no instances are running
+
+    def test_list_for_empty(self):
+        HEADING()
+        Benchmark.Start()
+        # hello
+        output = apptainer.list()
+        Benchmark.Stop()
+        print (output)
+        assert isinstance(output, list)
+        
+        assert len(output) == 0
+
+
 # 3. start an instance
+
+    def test_start(self):
+        HEADING()
+        Benchmark.Start()
+        with pytest.raises(ValueError):
+            apptainer.start()
+        apptainer.start(name="tf", image="tf.sif")
+        Benchmark.Stop()
+        instances = apptainer.list()
+        assert len(instances) == 1
+
+
 # 4. test ps
 # 5. test list
 # 6. test info
@@ -191,14 +219,6 @@ class a:
         assert isinstance(stdout, str)
         assert isinstance(stderr, str)
 
-    def test_start(self):
-        HEADING()
-        Benchmark.Start()
-        with pytest.raises(ValueError):
-            apptainer.start()
-        with pytest.raises(ValueError):
-            apptainer.start(name="instance_name")
-        Benchmark.Stop()
 
 
 

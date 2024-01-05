@@ -171,7 +171,7 @@ class Apptainer:
         Returns:
             tuple: A tuple containing the stdout and stderr of the command.
         """
-        r = self.info()
+        r = self.info()['instances']
         return r
     
 
