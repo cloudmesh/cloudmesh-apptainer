@@ -26,10 +26,8 @@ class Apptainer:
         except:
             self.hostname = "localhost"
         self.prefix = f"cloudmesh.apptainer.{self.hostname}"
-        self.prefix = f"cloudmesh.apptainer"
 
         self.db = YamlDB(filename="apptainer.yaml")
-
         self.load_location_from_db()
 
         self.save()
@@ -67,36 +65,33 @@ class Apptainer:
 
 
     def load_location_from_db(self):
-            """
-            Load the location of apptainers from the cloudmesh variable `apptainers` which is a coma separated string of dirs and sif files.
-            """
-            self.load()
-   
-            self.apptainers = []
-            for entry in self.location:
-                entry = path_expand(entry)
-                if os.path.isdir(entry):
-                    for name in os.listdir(entry):
-                        if name.endswith(".sif"):
-                            location = entry + "/" + name  # Fix: Removed unnecessary curly braces
-                            try:
-                                size = humanize.naturalsize(os.path.getsize(location))
-                            except:
-                                size = "unknown"
-                            if os.path.isfile(location):
-                                self.apptainers.append({"name": name, 
-                                                        "size": size, 
-                                                        "path": entry, 
-                                                        "location": location,
-                                                        "hostname": self.hostname}
-                                                        )  # Fix: Removed unnecessary double quotes
-                elif entry.endswith(".sif"):
-                    if os.path.isfile(entry):
-                        self.apptainers.append({"name": os.path.basename(entry), "size": size, "path": os.path.dirname(entry), "location": entry})
+        self.load()
+
+        self.apptainers = []
+        for entry in self.location:
+            entry = path_expand(entry)
+            if os.path.isdir(entry):
+                for name in os.listdir(entry):
+                    if name.endswith(".sif"):
+                        location = entry + "/" + name  # Fix: Removed unnecessary curly braces
                         try:
-                            size = humanize.naturalsize(os.path.getsize(entry))
+                            size = humanize.naturalsize(os.path.getsize(location))
                         except:
                             size = "unknown"
+                        if os.path.isfile(location):
+                            self.apptainers.append({"name": name, 
+                                                    "size": size, 
+                                                    "path": entry, 
+                                                    "location": location,
+                                                    "hostname": self.hostname}
+                                                    )  # Fix: Removed unnecessary double quotes
+            elif entry.endswith(".sif"):
+                if os.path.isfile(entry):
+                    self.apptainers.append({"name": os.path.basename(entry), "size": size, "path": os.path.dirname(entry), "location": entry})
+                    try:
+                        size = humanize.naturalsize(os.path.getsize(entry))
+                    except:
+                        size = "unknown"
                         
     def add_location(self, path):
         """
@@ -108,6 +103,9 @@ class Apptainer:
         Returns:
         None
         """
+        if path not in self.location:
+            self.location.append(path)
+        self.save() 
         self.load_location_from_db()
 
     def images(self, directory=None):

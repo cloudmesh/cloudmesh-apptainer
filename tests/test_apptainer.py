@@ -109,16 +109,19 @@ class TestConfig:
         assert where[1] == "images/tfs.sif"
 
 
-class h:
-
     def test_add_location(self):
         HEADING()
         Benchmark.Start()
-        apptainer.add_location("/path/to/location")
+        Shell.mkdir("more-images")
+        apptainer.add_location("more-images")
+        apptainer.save()
         Benchmark.Stop()
+        print (apptainer.location)
 
-        assert len(self.location) == 1
-        assert apptainer.location[0] == "/path/to/location"
+        assert "more-images" in apptainer.location
+        assert len(apptainer.location) >= 1
+        assert apptainer.location[0] == "images"
+        assert apptainer.location[1] == "more-images"
 
 
 class g:
