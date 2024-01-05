@@ -129,6 +129,17 @@ class TestConfig:
         Benchmark.print(csv=True, sysinfo=False, tag="cmd5")
 
 # TESTE DONE TILL HERE
+
+# 1. call stop all instances
+# 2. tests taht no instances are running
+# 3. start an instance
+# 4. test ps
+# 5. test list
+# 6. test info
+# 7. test stats
+# 8. test inspect
+# 9. test stop
+        
         
 class g:
     def test_info(self):
