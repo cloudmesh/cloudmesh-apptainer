@@ -4,6 +4,7 @@ from cloudmesh.common.debug import VERBOSE
 from cloudmesh.common.parameter import Parameter
 from cloudmesh.common.util import banner
 from cloudmesh.common.util import path_expand
+from cloudmesh.common.Shell import Shell
 from cloudmesh.common.variables import Variables
 from cloudmesh.shell.command import PluginCommand
 from cloudmesh.shell.command import command
@@ -27,12 +28,13 @@ class ApptainerCommand(PluginCommand):
                 apptainer info
                 apptainer --dir=DIRECTORY
                 apptainer --add=SIF
-                apptainer cache
-                apptainer images [DIRECTORY]
+                apptainer cache [--output=OUTPUT]
+                apptainer images [DIRECTORY] [--output=OUTPUT]
                 apptainer start NAME IMAGE [--home=PWD] [--gpu=GPU] [OPTIONS] [--dryrun]
                 apptainer stop NAME 
                 apptainer shell NAME
-                apptainer exec NAME COMMAND
+                apptainer exec NAME [--command=COMMAND]
+                apptainer stats NAME [--output=OUTPUT]
                         
                   This command can be used to manage apptainers.
 
@@ -45,13 +47,14 @@ class ApptainerCommand(PluginCommand):
                       URL       The URL of the file to be downloaded
 
                   Options:
-                        --dir=DIRECTORY  sets the the directory of the a list of aptainers
-                        --add=SIF        adds a sif file to the list of apptainers
-                        --image=IMAGE    sets the image to be used
-                        --home=PWD       sets the home directory of the apptainer
-                        --gpu=GPU        sets the GPU to be used
-                        --output=OUTPUT  the format of the output [default: table]
-                        --detail         shows more details [default: False]    
+                        --dir=DIRECTORY    sets the the directory of the a list of aptainers
+                        --add=SIF          adds a sif file to the list of apptainers
+                        --image=IMAGE      sets the image to be used
+                        --home=PWD         sets the home directory of the apptainer
+                        --gpu=GPU          sets the GPU to be used
+                        --command=COMMAND  sets the command to be executed
+                        --output=OUTPUT    the format of the output [default: table]
+                        --detail           shows more details [default: False]    
                         
                   Description:
                   
@@ -108,7 +111,7 @@ class ApptainerCommand(PluginCommand):
         #variables = Variables()
         #variables["apptainer_dir"] = True
 
-        map_parameters(arguments, "output")
+        map_parameters(arguments, "output", "command")
 
         
         # arguments = Parameter.parse(
@@ -153,7 +156,7 @@ class ApptainerCommand(PluginCommand):
         elif arguments.cache:
 
             data = app.cache()
-            print(Printer.attribute(data))
+            print(Printer.attribute(data, output=arguments.output))
             
         elif arguments["--add"]:
             print("option add")
@@ -163,6 +166,11 @@ class ApptainerCommand(PluginCommand):
             data = app.inspect(arguments.NAME)
             print(Printer.attribute(data))
 
+        elif arguments.stats:
+            r = app.stats(name=arguments.NAME, output="json")
+            
+            print (Printer.attribute(r, output=arguments.output))
+            
         elif arguments.start:
             r = app.start(name=arguments.NAME, image=arguments.IMAGE, home=arguments.home, gpu=arguments.gpu, options=arguments.OPTIONS)
 
@@ -173,12 +181,17 @@ class ApptainerCommand(PluginCommand):
             r = app.shell(arguments.NAME)
 
         elif arguments.exec:
-            r = app.exec(arguments.NAME)
+            print(arguments.exec)
+            if not arguments.command:
+                Shell.error("command not specified. please use --command=COMMAND")
+                return False
+            stdout,stderr = app.exec(name=arguments.NAME, command=arguments.command)
+            print(stdout)
 
         elif arguments.images:
             directory = arguments.DIRECTORY
             data = app.images(directory=directory)
-            print(tabulate(data, headers="keys", tablefmt="simple_grid", showindex="always"))
+            print (Printer.write(data,  output=arguments.output))
         
         elif arguments.download:
             name = arguments.NAME
@@ -187,5 +200,11 @@ class ApptainerCommand(PluginCommand):
             print (f"NAME>{name}<")
 
             app.download(name=name, url=arguments.URL)
+
+        elif arguments.load:
+            r = app.load()
+
+        elif arguments.save:
+            r = app.save()
 
         return ""

@@ -25,7 +25,7 @@ class Apptainer:
             self.hostname = os.environ.get("HOSTNAME") or os.uname()[1] 
         except:
             self.hostname = "localhost"
-        self.prefix = f"cloudmesh.apptainer.{self.hostname}"
+        self.prefix = f"cloudmesh.apptainer"
 
         self.db = YamlDB(filename="apptainer.yaml")
         self.load_location_from_db()
@@ -256,7 +256,9 @@ class Apptainer:
 
 
     def cache(self):
-        result = subprocess.check_output("apptainer cache list", shell=True, universal_newlines=True)
+        result, stderr = self.system(name="cache", 
+                                     command="apptainer cache list", 
+                                     register=False)
 
         #output = "There are 1 container file(s) using 43.48 MiB and 66 oci blob file(s) using 7.01 GiB of space\nTotal space used: 7.05 GiB"
 
