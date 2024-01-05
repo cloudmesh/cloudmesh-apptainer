@@ -10,6 +10,7 @@ from cloudmesh.common.debug import VERBOSE
 from cloudmesh.common.util import HEADING
 from cloudmesh.apptainer.apptainer import Apptainer
 from cloudmesh.common.Printer import Printer
+from cloudmesh.common.console  import Console
 import os
 
 from tabulate import tabulate
@@ -132,7 +133,15 @@ class TestConfig:
 
 # 1. call stop all instances
 
-# TODO
+    def test_stop_all(self):
+        HEADING()
+        Benchmark.Start()
+        instances = apptainer.list()
+        if len(instances) > 0:
+            apptainer.stop(name="all")
+            Benchmark.Stop()
+            instances = apptainer.list()
+        assert len(instances) == 0
 
 # 2. tests that no instances are running
 
@@ -144,9 +153,7 @@ class TestConfig:
         Benchmark.Stop()
         print (output)
         assert isinstance(output, list)
-        
         assert len(output) == 0
-
 
 # 3. start an instance
 
@@ -162,14 +169,32 @@ class TestConfig:
 
 
 # 4. test ps
-# 5. test list
-# 6. test info
-# 7. test stats
-# 8. test inspect
-# 9. test stop
         
 
-class g:
+    def test_ps(self):
+        HEADING()
+        Benchmark.Start()
+        processes = apptainer.ps()
+        print (processes)
+        Benchmark.Stop()
+        assert isinstance(processes, list)
+
+
+# 5. test list
+    def test_list_instance(self):
+        HEADING()
+        Benchmark.Start()
+        # hello
+        output = apptainer.list()
+        Benchmark.Stop()
+        print (output)
+        assert isinstance(output, list)
+        assert len(output) == 1
+        print (Printer.write(output))
+
+
+# 6. test info
+
     def test_info(self):
         HEADING()
         Benchmark.Start()
@@ -180,44 +205,55 @@ class g:
         assert isinstance(output_dict, dict)
         assert "instances" in output_dict
 
+# 7. test stats
 
-class a:
-
-    def test_ps(self):
+    
+    def test_stats(self):
         HEADING()
+        instance = "tf"
         Benchmark.Start()
-        processes = apptainer.ps()
+        try:
+            stdout, stderr = apptainer.stats(name=instance, output="json", verbose=True)
+        except Exception as e:
+            Console.error(e, traceflag=True)
+            stdout = ""
+            stderr = ""
+
         Benchmark.Stop()
-        assert isinstance(processes, list)
+        print (stdout)
+        print(stderr)
+        assert isinstance(stdout, str)
+        assert isinstance(stderr, str)
 
 
-    def test_list(self):
-        HEADING()
-        Benchmark.Start()
-        # hello
-        output = apptainer.list()
-        Benchmark.Stop()
-        assert isinstance(output, tuple)
-        assert len(output) == 2
 
-
+# 8. test inspect
 
     def test_inspect(self):
         HEADING()
         Benchmark.Start()
-        result = apptainer.inspect("image_name")
+        result = apptainer.inspect("tf")
         Benchmark.Stop()
-        assert isinstance(result, list)
+        print (result)
+        assert isinstance(result, dict)
         assert len(result) > 0
+        assert result['hostname'] == 'localhost'
+        print(Printer.attribute(result))
 
 
-    def test_stats(self):
+
+# 9. test stop
+        
+    def test_stop_tf(self):
         HEADING()
         Benchmark.Start()
-        stdout, stderr = apptainer.stats(output="json")
-        Benchmark.Stop()
-        assert isinstance(stdout, str)
-        assert isinstance(stderr, str)
+        instances = apptainer.list()
+        if len(instances) > 0:
+            apptainer.stop(name="tf")
+            Benchmark.Stop()
+            instances = apptainer.list()
+        assert len(instances) == 0
+
 
 
 

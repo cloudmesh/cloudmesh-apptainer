@@ -192,7 +192,7 @@ class Apptainer:
             command += " --logs"
         if verbose:
             banner(command)
-        stdout, stderr = self.system(command)
+        stdout, stderr = self.system(command=command)
         
         output_dict = json.loads(stdout)
         self.db[f"{self.prefix}.instances"] = output_dict["instances"]
@@ -232,21 +232,24 @@ class Apptainer:
             dict: A dictionary containing the JSON data from stdout.
             str: The stderr of the command.
         """
-        _name,location = self.find_image(name)
+        _name, location = self.find_image(name)
         command = f"apptainer inspect --json {location}"
-        stdout, stderr = self.system("inspect", command, register=False)
+        stdout, stderr = self.system(name="inspect", command=command, register=False)
 
         data = json.loads(stdout)
 
         labels = data['data']['attributes']['labels']
-        result = []
-        result.append({'attribute': 'name','value':  _name})
-        result.append({'attribute': 'location','value':  location})
-        result.append({"attribute": "hostname", "value": self.hostname})
-        result += [{'attribute': key, 'value': value} for key, value in labels.items()]        
-        result.append(        {'attribute': 'type','value':  data['type']})
         size = humanize.naturalsize(os.path.getsize(location))
-        result.append({'attribute': 'size','value':  size})
+        
+        result = {
+            'name': _name,
+            'location': location,
+            "hostname": self.hostname,
+            "type": data["type"],
+            "size": size
+        }
+        
+        result.update(labels)
         
         return result
     
@@ -285,7 +288,7 @@ class Apptainer:
         return data
 
 
-    def stats(self, output=None, verbose=False):
+    def stats(self, name=None, output=None, verbose=False):
         """
         Displays statistics about the instances.
 
@@ -296,14 +299,15 @@ class Apptainer:
         Returns:
             tuple: A tuple containing the stdout and stderr of the command.
         """
-        command = "apptainer instance stats"
+        command = f"apptainer instance stats"
         if "json" in output:
             command += " --json"
         else:
             raise ValueError(f"Output format {output} not supported")
         if verbose:
             print(command)
-        stdout, stderr = self.system(command, register=False)
+        command += f" {name}"
+        stdout, stderr = self.system(command=command, register=False)
         return stdout, stderr
 
     def start(self, name=None, image=None, gpu=None, home=None, clean=True, options=None, dryrun=False):
@@ -388,20 +392,26 @@ class Apptainer:
         Returns:
             tuple: A tuple containing the stdout and stderr of the command.
         """
+
         command = "apptainer instance stop"
-        if force:
-            command += " --force"
-        if signal:
-            command += f" --signal {signal}"
-        if timeout:
-            command += f" --timeout {timeout}"
-        if user:
-            command += f" --user {user}"
+        
         if name == "all":
-            command += " --all"
-        else :
-            command += f" {name}"
-        stdout, stderr = self.system("stop", command, register=False)
+            command += " --all"            
+        else:
+            if force:
+                command += " --force"
+            if signal:
+                command += f" --signal {signal}"
+            if timeout:
+                command += f" --timeout {timeout}"
+            if user:
+                command += f" --user {user}"
+            if name == "all":
+                command += " --all"
+            else :
+                command += f" {name}"
+        banner(command)
+        stdout, stderr = self.system(name="stop", command=command, register=False)
         return stdout, stderr
 
    
@@ -467,7 +477,7 @@ class Apptainer:
             tuple: A tuple containing the stdout and stderr of the command.
         """
         command = f"apptainer shell instance://{name}"
-        stdout, stderr = self.system(command)
+        stdout, stderr = self.system(command=command)
         return stdout, stderr
     
     def download(self, name=None, url=None):
