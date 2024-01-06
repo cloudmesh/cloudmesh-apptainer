@@ -20,6 +20,7 @@ import time
 import subprocess
 from tabulate import tabulate
 from pprint import pprint
+from cloudmesh.common.util import writefile
 
 DOCKERHUB="docker://nvcr.io/nvidia/tensorflow:23.12-tf2-py3"
 # DOCKERHUB="docker://nvidia/cuda:12.2.0-devel-ubuntu20.04"
@@ -256,35 +257,44 @@ class TestConfig:
     def test_start_tf_again(self):
         HEADING()
         Benchmark.Start()
-        Shell.run("cma start tf tf.sif")       
+        os.system("cma start tf tf")       
         Benchmark.Stop()
 
         instances = Shell.run("cma list")
         assert len(instances) > 0
 
+class a:
 
     def test_exec_ls(self):
         HEADING()
         Benchmark.Start()
 
-        stdout = Shell.run("cma exec tf ls")
-        # stdout, stderr = apptainer.exec(name="tf", command="ls")
+        command = 'cma exec tf \\"ls -lisa\\"'
+
+        print (command)
+        #os.system(command)
+        stdout, stderr = system_run(command)
+        # stdout, stderr = apptainer.exec(name="tf", command=command)
 
         Benchmark.Stop()
+        print("======== OUTPUT")
         print(stdout)
-        # print(stderr)
+        print ("======== ERROR")
+        print(stderr)
+        print()
         assert "dot-tf.sif" in stdout
+        assert "Makefile" in stdout
 
     def test_exec_python(self):
         HEADING()
         Benchmark.Start()
 
-        command = r"python -c 'import tensorflow as tf\; print(tf.__version__)'"
-        #stdout = Shell.run("cma exec tf \"{command}\"")
-        # stdout, stderr = apptainer.exec(name="tf", command=command, nv=True)
+        script = "script.sh"
+        command = 'python -c "import tensorflow as tf; print(tf.__version__)"'
+        writefile("script.sh", command)
         
         try:
-            stdout,stderr = system_run(rf"cma exec tf --command=\"{command}\"")
+            stdout,stderr = system_run(f'cma exec tf {script}')
             banner("stdout")
             print (stdout)
             banner("stderr")

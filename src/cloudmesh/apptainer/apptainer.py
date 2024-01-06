@@ -468,6 +468,7 @@ class Apptainer:
             cmd += f" --home {home}"
         if verbose:
             print(cmd)
+        print(cmd)
 
         stdout, stderr = self.system(name="exec", command=cmd, register=False)
         return stdout, stderr

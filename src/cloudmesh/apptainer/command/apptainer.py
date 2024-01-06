@@ -11,8 +11,8 @@ from cloudmesh.shell.command import command
 from cloudmesh.shell.command import map_parameters
 from cloudmesh.common.Printer import Printer
 from tabulate import tabulate
-from cloudmesh.common.util import readfile
-
+from cloudmesh.common.util import readfile, writefile
+import os
 
 class ApptainerCommand(PluginCommand):
     # noinspection PyUnusedLocal
@@ -33,7 +33,7 @@ class ApptainerCommand(PluginCommand):
                 apptainer start NAME IMAGE [--home=PWD] [--gpu=GPU] [OPTIONS] [--dryrun]
                 apptainer stop NAME 
                 apptainer shell NAME
-                apptainer exec NAME COMMAND
+                apptainer exec NAME COMMAND 
                 apptainer stats NAME [--output=OUTPUT]
                         
                   This command can be used to manage apptainers.
@@ -55,6 +55,7 @@ class ApptainerCommand(PluginCommand):
                         --command=COMMAND  sets the command to be executed
                         --output=OUTPUT    the format of the output [default: table]
                         --detail           shows more details [default: False]    
+                        -c COMMAND         sets the command to be executed
                         
             Description:
                   
@@ -182,20 +183,16 @@ class ApptainerCommand(PluginCommand):
 
         elif arguments.exec:
 
-            banner("ARGS")
-            print(args)
-            banner("ARGUMENTS")
-            print(arguments.exec)
-            banner("EXEC")
-            
-            if not arguments.COMMAND:
-                Console.error("command not specified. please use COMMAND")
-                return False
-            
-            print(arguments.COMMAND)
+            command = arguments.COMMAND
 
-            command = " ".join(arguments.COMMAND)
-            stdout,stderr = app.exec(name=arguments.NAME, command=command)
+            if os.path.isfile(command):
+                script = command
+                command = f"sh {script}"            
+                
+            
+            name = arguments.NAME
+
+            stdout,stderr = app.exec(name=name, command=command)
             print(stdout)
             print(stderr)
 
