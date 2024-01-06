@@ -33,7 +33,7 @@ class ApptainerCommand(PluginCommand):
                 apptainer start NAME IMAGE [--home=PWD] [--gpu=GPU] [OPTIONS] [--dryrun]
                 apptainer stop NAME 
                 apptainer shell NAME
-                apptainer exec NAME [--command=COMMAND]
+                apptainer exec NAME COMMAND...
                 apptainer stats NAME [--output=OUTPUT]
                         
                   This command can be used to manage apptainers.
@@ -111,7 +111,10 @@ class ApptainerCommand(PluginCommand):
         #variables = Variables()
         #variables["apptainer_dir"] = True
 
-        map_parameters(arguments, "output", "command")
+        print ("A", args)
+        print ("V, ", arguments)
+
+        map_parameters(arguments, "output")
 
         
         # arguments = Parameter.parse(
@@ -181,11 +184,21 @@ class ApptainerCommand(PluginCommand):
             r = app.shell(arguments.NAME)
 
         elif arguments.exec:
+
+            banner("ARGS")
+            print(args)
+            banner("ARGUMENTS")
             print(arguments.exec)
-            if not arguments.command:
-                Shell.error("command not specified. please use --command=COMMAND")
+            banner("EXEC")
+            
+            if not arguments.COMMAND:
+                Console.error("command not specified. please use COMMAND")
                 return False
-            stdout,stderr = app.exec(name=arguments.NAME, command=arguments.command)
+            
+            print(arguments.COMMAND)
+
+            command = " ".join(arguments.COMMAND)
+            stdout,stderr = app.exec(name=arguments.NAME, command=command)
             print(stdout)
 
         elif arguments.images:
