@@ -21,7 +21,7 @@ class ApptainerCommand(PluginCommand):
         """
         ::
 
-          Usage:
+            Usage:
                 apptainer download NAME URL
                 apptainer inspect NAME
                 apptainer list [--detail] [--output=OUTPUT]
@@ -33,7 +33,7 @@ class ApptainerCommand(PluginCommand):
                 apptainer start NAME IMAGE [--home=PWD] [--gpu=GPU] [OPTIONS] [--dryrun]
                 apptainer stop NAME 
                 apptainer shell NAME
-                apptainer exec NAME COMMAND...
+                apptainer exec NAME COMMAND
                 apptainer stats NAME [--output=OUTPUT]
                         
                   This command can be used to manage apptainers.
@@ -56,52 +56,52 @@ class ApptainerCommand(PluginCommand):
                         --output=OUTPUT    the format of the output [default: table]
                         --detail           shows more details [default: False]    
                         
-                  Description:
+            Description:
                   
-                    cms apptainer list
-                        lists the apptainers in the specified directory 
-                        by default the directory is 
+                cms apptainer list
+                    lists the apptainers in the specified directory 
+                    by default the directory is 
 
-                    cms apptainer --dir=DIRECTORY
-                        sets the default apptainer directory in the cms variable apptainer_dir
-                    
-                    cms apptainer --add=SIF
-                        adds a sif file to the list of apptainers
-                    
-                    cms apptainer cache
-                        lists the cached apptainers
+                cms apptainer --dir=DIRECTORY
+                    sets the default apptainer directory in the cms variable apptainer_dir
+                
+                cms apptainer --add=SIF
+                    adds a sif file to the list of apptainers
+                
+                cms apptainer cache
+                    lists the cached apptainers
 
-                    cms apptainer info
-                        prints information contained in the apptainer.yaml file. An example is given next
+                cms apptainer info
+                    prints information contained in the apptainer.yaml file. An example is given next
 
-                        cloudmesh:
-                            apptainer:
-                                location:
-                                - ~/.cloudmesh/apptainer
-                                - ../rivanna/images
-                                apptainers:
-                                - name: cloudmesh-tfs.sif
-                                    size: 1.5 GB
-                                    path: ../rivanna/images
-                                    location: ../rivanna/images/cloudmesh-tfs.sif
-                                    hostname: udc-aj34-33
-                                - name: cloudmesh-tensorflow.sif
-                                    size: 7.4 GB
-                                    path: ../rivanna/images
-                                    location: ../rivanna/images/cloudmesh-tensorflow.sif
-                                    hostname: udc-aj34-33
-                                - name: haproxy_latest.sif
-                                                                size: 45.6 MB
-                                                                path: ../rivanna/images
-                                                                location: ../rivanna/images/haproxy_latest.sif
-                                                                hostname: udc-aj34-33
-                                                            instances:
-                                                            - instance: tfs
-                                                                pid: 337625
-                                                                img: /scratch/$USER/cm/5/rivanna/images/cloudmesh-tfs.sif
-                                                                ip: ''
-                                                                logErrPath: /home/$USER/.apptainer/instances/logs/udc-aj34-33/$USER/tfs.err
-                                                                logOutPath: /home/$USER/.apptainer/instances/logs/udc-aj34-33/$USER/tfs.out
+                    cloudmesh:
+                        apptainer:
+                            location:
+                            - ~/.cloudmesh/apptainer
+                            - ../rivanna/images
+                            apptainers:
+                            - name: cloudmesh-tfs.sif
+                                size: 1.5 GB
+                                path: ../rivanna/images
+                                location: ../rivanna/images/cloudmesh-tfs.sif
+                                hostname: udc-aj34-33
+                            - name: cloudmesh-tensorflow.sif
+                                size: 7.4 GB
+                                path: ../rivanna/images
+                                location: ../rivanna/images/cloudmesh-tensorflow.sif
+                                hostname: udc-aj34-33
+                            - name: haproxy_latest.sif
+                                size: 45.6 MB
+                                path: ../rivanna/images
+                                location: ../rivanna/images/haproxy_latest.sif
+                                hostname: udc-aj34-33
+                            instances:
+                            - instance: tfs
+                                pid: 337625
+                                img: /scratch/$USER/cm/5/rivanna/images/cloudmesh-tfs.sif
+                                ip: ''
+                                logErrPath: /home/$USER/.apptainer/instances/logs/udc-aj34-33/$USER/tfs.err
+                                logOutPath: /home/$USER/.apptainer/instances/logs/udc-aj34-33/$USER/tfs.out
 
 
 
@@ -110,9 +110,6 @@ class ApptainerCommand(PluginCommand):
 
         #variables = Variables()
         #variables["apptainer_dir"] = True
-
-        print ("A", args)
-        print ("V, ", arguments)
 
         map_parameters(arguments, "output")
 
@@ -200,6 +197,7 @@ class ApptainerCommand(PluginCommand):
             command = " ".join(arguments.COMMAND)
             stdout,stderr = app.exec(name=arguments.NAME, command=command)
             print(stdout)
+            print(stderr)
 
         elif arguments.images:
             directory = arguments.DIRECTORY

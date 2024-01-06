@@ -24,6 +24,7 @@ from pprint import pprint
 DOCKERHUB="docker://nvcr.io/nvidia/tensorflow:23.12-tf2-py3"
 # DOCKERHUB="docker://nvidia/cuda:12.2.0-devel-ubuntu20.04"
 
+os.system("cms set timer=False")
 
 def system_run(command=None, name=None):
     process = subprocess.Popen(
@@ -103,6 +104,9 @@ class TestConfig:
         result = Shell.run("cma images")
         print (result)
         result = Shell.run("cma images --output=json")
+
+        print ("RRR", result)
+
         result = json.loads(result)
         print (result)
         Benchmark.Stop()
@@ -185,7 +189,7 @@ class TestConfig:
     def test_start(self):
         HEADING()
         Benchmark.Start()
-        Shell.run("cma start tf tf.sif")       
+        Shell.run("cma start tf tf")       
         Benchmark.Stop()
 
         instances = Shell.run("cma list")
@@ -247,6 +251,17 @@ class TestConfig:
         Benchmark.Stop()
         print (result)
         assert True
+
+
+    def test_start_tf_again(self):
+        HEADING()
+        Benchmark.Start()
+        Shell.run("cma start tf tf")       
+        Benchmark.Stop()
+
+        instances = Shell.run("cma list")
+        assert len(instances) > 0
+
 
     def test_exec_ls(self):
         HEADING()
