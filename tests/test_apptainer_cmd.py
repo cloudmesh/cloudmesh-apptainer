@@ -256,7 +256,7 @@ class TestConfig:
     def test_start_tf_again(self):
         HEADING()
         Benchmark.Start()
-        Shell.run("cma start tf tf")       
+        Shell.run("cma start tf tf.sif")       
         Benchmark.Stop()
 
         instances = Shell.run("cma list")
@@ -307,6 +307,7 @@ class TestConfig:
         if len(instances) > 0:
             Shell.run("cma stop tf")
             Benchmark.Stop()
+            time.sleep(1)
             instances = Shell.run("cma list")
         assert len(instances) == 0
 

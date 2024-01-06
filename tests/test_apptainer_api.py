@@ -12,6 +12,7 @@ from cloudmesh.apptainer.apptainer import Apptainer
 from cloudmesh.common.Printer import Printer
 from cloudmesh.common.console  import Console
 import os
+import time
 
 from tabulate import tabulate
 
@@ -234,7 +235,7 @@ class TestConfig:
         print(stderr)
         assert "dot-tf.sif" in stdout
 
-    def test_exec_ls(self):
+    def test_exec_tf_version(self):
         HEADING()
         Benchmark.Start()
         command = "python -c 'import tensorflow as tf; print(tf.__version__)'"
@@ -251,6 +252,7 @@ class TestConfig:
         if len(instances) > 0:
             apptainer.stop(name="tf")
             Benchmark.Stop()
+            time.sleep(1)
             instances = apptainer.list()
         assert len(instances) == 0
 
