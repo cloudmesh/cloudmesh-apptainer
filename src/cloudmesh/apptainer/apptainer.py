@@ -78,20 +78,24 @@ class Apptainer:
                             size = "unknown"
                         if os.path.isfile(location):
                             self.apptainers.append(
-                                {"name": name,
-                                 "size": size,
-                                 "path": entry,
-                                 "location": location,
-                                 "hostname": self.hostname
-                                 })
+                                {
+                                    "name": name,
+                                    "size": size,
+                                    "path": entry,
+                                    "location": location,
+                                    "hostname": self.hostname,
+                                }
+                            )
             elif entry.endswith(".sif"):
                 if os.path.isfile(entry):
                     self.apptainers.append(
-                        {"name": os.path.basename(entry),
-                         "size": size,
-                         "path": os.path.dirname(entry),
-                         "location": entry
-                         })
+                        {
+                            "name": os.path.basename(entry),
+                            "size": size,
+                            "path": os.path.dirname(entry),
+                            "location": entry,
+                        }
+                    )
                     try:
                         size = humanize.naturalsize(os.path.getsize(entry))
                     except:
@@ -115,11 +119,11 @@ class Apptainer:
     def images(self, directory=None):
         """
         Retrieves a list of images from the apptainer.yaml file.
-        
+
         Args:
             directory (str): The directory to search for images.
                              If not specified, all images will be retrieved.
-        
+
         Returns:
             list: A list of images found in the specified directory.
         """
@@ -175,7 +179,7 @@ class Apptainer:
         Returns:
             tuple: A tuple containing the stdout and stderr of the command.
         """
-        r = self.info()['instances']
+        r = self.info()["instances"]
         return r
 
     def info(self, logs=False, verbose=False):
@@ -235,21 +239,19 @@ class Apptainer:
         """
         _name, location = self.find_image(name)
         command = f"apptainer inspect --json {location}"
-        stdout, stderr = self.system(name="inspect",
-                                     command=command,
-                                     register=False)
+        stdout, stderr = self.system(name="inspect", command=command, register=False)
 
         data = json.loads(stdout)
 
-        labels = data['data']['attributes']['labels']
+        labels = data["data"]["attributes"]["labels"]
         size = humanize.naturalsize(os.path.getsize(location))
 
         result = {
-            'name': _name,
-            'location': location,
+            "name": _name,
+            "location": location,
             "hostname": self.hostname,
             "type": data["type"],
-            "size": size
+            "size": size,
         }
 
         result.update(labels)
@@ -257,9 +259,9 @@ class Apptainer:
         return result
 
     def cache(self):
-        result, stderr = self.system(name="cache",
-                                     command="apptainer cache list",
-                                     register=False)
+        result, stderr = self.system(
+            name="cache", command="apptainer cache list", register=False
+        )
 
         # output = "There are 1 container file(s) using 43.48 MiB and 66 oci blob file(s) using 7.01 GiB of space\nTotal space used: 7.05 GiB"
 
@@ -271,14 +273,16 @@ class Apptainer:
         container_space = re.search(r"using ([\d.]+) (MiB|GiB)", result).groups()
         oci_blob_files = re.search(r"(\d+) oci blob file", result).group(1)
         oci_blob_space = re.search(r"using ([\d.]+) (MiB|GiB)", result).groups()
-        total_space = re.search(r"Total space used: ([\d.]+) (MiB|GiB)", result).groups()
+        total_space = re.search(
+            r"Total space used: ([\d.]+) (MiB|GiB)", result
+        ).groups()
 
-        if 'SINGULARITY_CACHEDIR' in os.environ:
-            s_cache = os.environ['SINGULARITY_CACHEDIR']
+        if "SINGULARITY_CACHEDIR" in os.environ:
+            s_cache = os.environ["SINGULARITY_CACHEDIR"]
         else:
             s_cache = None
-        if 'APPTAINER_CACHEDIR' in os.environ:
-            a_cache = os.environ['APPTAINER_CACHEDIR']
+        if "APPTAINER_CACHEDIR" in os.environ:
+            a_cache = os.environ["APPTAINER_CACHEDIR"]
         else:
             a_cache = None
 
@@ -290,7 +294,7 @@ class Apptainer:
             "OCI_Blob_Space": " ".join(oci_blob_space),
             "Total_Space_Used": " ".join(total_space),
             "SINGULARITY_CACHEDIR": s_cache,
-            "APPTAINER_CACHEDIR": a_cache
+            "APPTAINER_CACHEDIR": a_cache,
         }
         return data
 
@@ -316,14 +320,16 @@ class Apptainer:
         stdout, stderr = self.system(command=command, register=False)
         return stdout, stderr
 
-    def start(self,
-              name=None,
-              image=None,
-              gpu=None,
-              home=None,
-              clean=True,
-              options=None,
-              dryrun=False):
+    def start(
+        self,
+        name=None,
+        image=None,
+        gpu=None,
+        home=None,
+        clean=True,
+        options=None,
+        dryrun=False,
+    ):
         if name is None:
             raise ValueError("Name of the instance must be specified")
         if image is None:
@@ -358,7 +364,9 @@ class Apptainer:
 
         banner(f"Start {name} {path} {home}")
 
-        command = gpu_visible_devices + f"apptainer instance start --nv {home} {path} {name}"
+        command = (
+            gpu_visible_devices + f"apptainer instance start --nv {home} {path} {name}"
+        )
         if options:
             command += " " + " ".join(options)
         if dryrun:
@@ -368,9 +376,7 @@ class Apptainer:
             stdout, stderr = self.system(name=name, command=command, register=True)
         return stdout, stderr
 
-    def stop(
-        self, name=None, force=False, signal=None, timeout=10, user=None
-    ):
+    def stop(self, name=None, force=False, signal=None, timeout=10, user=None):
         """
         Stops the instances.
 
@@ -406,9 +412,12 @@ class Apptainer:
         stdout, stderr = self.system(name="stop", command=command, register=False)
         return stdout, stderr
 
-    def exec(self, name=None, command=None, bind=None, nv=False, home=None, verbose=False):
+    def exec(
+        self, name=None, command=None, bind=None, nv=False, home=None, verbose=False
+    ):
         """
-        Execute a command in a container with optional bind paths, Nvidia support, and a specified home directory.
+        Execute a command in a container with optional bind paths, Nvidia support,
+        and a specified home directory.
 
         Args:
             name (str): The container in which to execute the command.
@@ -439,7 +448,7 @@ class Apptainer:
 
             exec("my_container", "ls", bind=[{"src": "/path1", "dest": "/path2", "opts": "ro"},
             {"src": "/path3", "dest": "/path4", "opts": "rw"}], nv=True, home="/home/user")
-        
+
         """
 
         # Construct the command
@@ -513,7 +522,7 @@ class Apptainer:
 
 
 def main():
-    arguments = ' '.join(sys.argv[1:])
+    arguments = " ".join(sys.argv[1:])
     os.system(f"cms apptainer {arguments}")
 
 

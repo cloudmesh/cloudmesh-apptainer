@@ -26,11 +26,11 @@ class ApptainerCommand(PluginCommand):
                 apptainer cache [--output=OUTPUT]
                 apptainer images [DIRECTORY] [--output=OUTPUT]
                 apptainer start NAME IMAGE [--home=PWD] [--gpu=GPU] [OPTIONS] [--dryrun]
-                apptainer stop NAME 
+                apptainer stop NAME
                 apptainer shell NAME
-                apptainer exec NAME COMMAND 
+                apptainer exec NAME COMMAND
                 apptainer stats NAME [--output=OUTPUT]
-                        
+
                 This command can be used to manage apptainers.
 
                 Arguments:
@@ -53,18 +53,18 @@ class ApptainerCommand(PluginCommand):
                     -c COMMAND         sets the command to be executed
 
             Description:
-                  
+
                 cms apptainer list
-                    lists the apptainers in the specified directory 
-                    by default the directory is 
+                    lists the apptainers in the specified directory
+                    by default the directory is
 
                 cms apptainer --dir=DIRECTORY
                     sets the default apptainer directory in the cms variable
                     apptainer_dir
-                
+
                 cms apptainer --add=SIF
                     adds a sif file to the list of apptainers
-                
+
                 cms apptainer cache
                     lists the cached apptainers
 
@@ -126,7 +126,6 @@ class ApptainerCommand(PluginCommand):
             print(r)
 
         elif arguments.list:
-
             detail = arguments["--detail"]
 
             out = app.list()
@@ -144,13 +143,13 @@ class ApptainerCommand(PluginCommand):
                     entry.pop("logErrPath")
                     entry.pop("logOutPath")
                 # print(Printer.write(data, order=None, output=arguments.output))
-                print(tabulate(data,
-                               headers="keys",
-                               tablefmt="simple_grid",
-                               showindex="always"))
+                print(
+                    tabulate(
+                        data, headers="keys", tablefmt="simple_grid", showindex="always"
+                    )
+                )
 
         elif arguments.cache:
-
             data = app.cache()
             print(Printer.attribute(data, output=arguments.output))
 
@@ -168,11 +167,13 @@ class ApptainerCommand(PluginCommand):
             print(Printer.attribute(r, output=arguments.output))
 
         elif arguments.start:
-            r = app.start(name=arguments.NAME,
-                          image=arguments.IMAGE,
-                          home=arguments.home,
-                          gpu=arguments.gpu,
-                          options=arguments.OPTIONS)
+            r = app.start(
+                name=arguments.NAME,
+                image=arguments.IMAGE,
+                home=arguments.home,
+                gpu=arguments.gpu,
+                options=arguments.OPTIONS,
+            )
 
         elif arguments.stop:
             r = app.stop(arguments.NAME)
@@ -181,7 +182,6 @@ class ApptainerCommand(PluginCommand):
             r = app.shell(arguments.NAME)
 
         elif arguments.exec:
-
             command = arguments.COMMAND
 
             if os.path.isfile(command):
