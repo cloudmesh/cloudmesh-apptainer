@@ -17,16 +17,27 @@
 
 
 
-The cloudmesh command apptainer command lets you more easily manage apptainers for application-oriented work. The main contributions are:
+The cloudmesh command apptainer command lets you more easily manage
+apptainers for application-oriented work. The main contributions are:
 
-1. It includes a Python API so containers can be managed directly from Python instead of a command line tool
-2. It includes a focussed command line tool with a selected number of features to more easily start, stop, list, and execute commands in a container. 
-3. It includes a number of enhanced features to showcase the locations and sizes of the images and instances.
-4. A simple YAML database is automatically created when using the API or the command-line tool so that a record is preserved for long-running containers. The record includes also a hostname, making it possible to use this database to manage containers on remote hosts.
+1. It includes a Python API so containers can be managed directly from
+   Python instead of a command line tool
 
-TODO: the remote host feature to start and stop containers is not yet fully implemented.
+2. It includes a focussed command line tool with a selected number of
+   features to more easily start, stop, list, and execute commands in
+   a container. This includes the ability to rn shell scripts in the
+   container while specifying them on commandline.
 
-To install it uyou can use 
+3. It includes a number of enhanced features to showcase the locations
+   and sizes of the images and instances.
+
+4. A simple YAML database is automatically created when using the API
+   or the command-line tool so that a record is preserved for
+   long-running containers. The record includes also a hostname,
+   making it possible to use this database to manage containers on
+   remote hosts.
+
+To install it you can use 
 
     pip install cloudmesh-apptainer
 
@@ -58,18 +69,20 @@ Command apptainer
 
 ::
 
-  Usage:
+    Usage:
+        apptainer download NAME URL
         apptainer inspect NAME
-        apptainer list [--output=OUTPUT]
+        apptainer list [--detail] [--output=OUTPUT]
         apptainer info
         apptainer --dir=DIRECTORY
         apptainer --add=SIF
-        apptainer cache
-        apptainer images [DIRECTORY]
+        apptainer cache [--output=OUTPUT]
+        apptainer images [DIRECTORY] [--output=OUTPUT]
         apptainer start NAME IMAGE [--home=PWD] [--gpu=GPU] [OPTIONS] [--dryrun]
         apptainer stop NAME 
         apptainer shell NAME
-        apptainer exec NAME COMMAND
+        apptainer exec NAME COMMAND 
+        apptainer stats NAME [--output=OUTPUT]
 
           This command can be used to manage apptainers.
 
@@ -78,69 +91,69 @@ Command apptainer
               PARAMETER  a parameterized parameter of the form "a[0-3],a5"
               OPTIONS   Options passed to the start command
               IMAGE     The name of the image to be used
+              NAME      The name of the apptainer
+              URL       The URL of the file to be downloaded
 
           Options:
-                --dir=DIRECTORY  sets the the directory of the a list of aptainers
-                --add=SIF        adds a sif file to the list of apptainers
-                --image=IMAGE    sets the image to be used
-                --home=PWD       sets the home directory of the apptainer
-                --gpu=GPU        sets the GPU to be used
-                --output=OUTPUT  the format of the output [default: table]
+                --dir=DIRECTORY    sets the the directory of the a list of aptainers
+                --add=SIF          adds a sif file to the list of apptainers
+                --image=IMAGE      sets the image to be used
+                --home=PWD         sets the home directory of the apptainer
+                --gpu=GPU          sets the GPU to be used
+                --command=COMMAND  sets the command to be executed
+                --output=OUTPUT    the format of the output [default: table]
+                --detail           shows more details [default: False]    
+                -c COMMAND         sets the command to be executed
 
-          Description:
+    Description:
+
+        cms apptainer list
+            lists the apptainers in the specified directory 
+            by default the directory is 
+
+        cms apptainer --dir=DIRECTORY
+            sets the default apptainer directory in the cms variable apptainer_dir
+
+        cms apptainer --add=SIF
+            adds a sif file to the list of apptainers
+
+        cms apptainer cache
+            lists the cached apptainers
+
+        cms apptainer info
+            prints information contained in the apptainer.yaml file. An example is given next
+
+            cloudmesh:
+                apptainer:
+                    location:
+                    - ~/.cloudmesh/apptainer
+                    - ../rivanna/images
+                    apptainers:
+                    - name: cloudmesh-tfs.sif
+                        size: 1.5 GB
+                        path: ../rivanna/images
+                        location: ../rivanna/images/cloudmesh-tfs.sif
+                        hostname: udc-aj34-33
+                    - name: cloudmesh-tensorflow.sif
+                        size: 7.4 GB
+                        path: ../rivanna/images
+                        location: ../rivanna/images/cloudmesh-tensorflow.sif
+                        hostname: udc-aj34-33
+                    - name: haproxy_latest.sif
+                        size: 45.6 MB
+                        path: ../rivanna/images
+                        location: ../rivanna/images/haproxy_latest.sif
+                        hostname: udc-aj34-33
+                    instances:
+                    - instance: tfs
+                        pid: 337625
+                        img: /scratch/$USER/cm/5/rivanna/images/cloudmesh-tfs.sif
+                        ip: ''
+                        logErrPath: /home/$USER/.apptainer/instances/logs/udc-aj34-33/$USER/tfs.err
+                        logOutPath: /home/$USER/.apptainer/instances/logs/udc-aj34-33/$USER/tfs.out
 
 
-            cms apptainer list
-                lists the apptainers in the specified directory 
-                by default the directory is 
 
-            cms apptainer --dir=DIRECTORY
-                sets the default apptainer directory in the cms variable apptainer_dir
-
-            cms apptainer --add=SIF
-                adds a sif file to the list of apptainers
-
-            cms apptainer cache
-                lists the cached apptainers
-
-            cms apptainer info
-                prints information contained in the apptainer.yaml file. An example is given next
-
-                cloudmesh:
-                    apptainer:
-                        location:
-                        - ~/.cloudmesh/apptainer
-                        - ../rivanna/images
-                        apptainers:
-                        - name: cloudmesh-tfs.sif
-                            size: 1.5 GB
-                            path: ../rivanna/images
-                            location: ../rivanna/images/cloudmesh-tfs.sif
-                            hostname: udc-aj34-33
-                        - name: cloudmesh-tensorflow.sif
-                            size: 7.4 GB
-                            path: ../rivanna/images
-                            location: ../rivanna/images/cloudmesh-tensorflow.sif
-                            hostname: udc-aj34-33
-                        - name: haproxy_latest.sif
-                            size: 45.6 MB
-                            path: ../rivanna/images
-                            location: ../rivanna/images/haproxy_latest.sif
-                            hostname: udc-aj34-33
-                        instances:
-                        - instance: tfs
-                            pid: 337625
-                            img: /scratch/$USER/cm/5/rivanna/images/cloudmesh-tfs.sif
-                            ip: ''
-                            logErrPath: /home/$USER/.apptainer/instances/logs/udc-aj34-33/$USER/tfs.err
-                            logOutPath: /home/$USER/.apptainer/instances/logs/udc-aj34-33/$USER/tfs.out
 ```
 <!-- STOP-MANUAL -->
 
-## Test
-
-It may be necessary to export your path to get `cma` command
-
-```bash
-PATH=$PATH:$HOME/.local/bin
-```

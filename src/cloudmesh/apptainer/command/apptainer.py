@@ -1,18 +1,13 @@
+import os
+
 from cloudmesh.apptainer.apptainer import Apptainer
-from cloudmesh.common.console import Console
-from cloudmesh.common.debug import VERBOSE
-from cloudmesh.common.parameter import Parameter
-from cloudmesh.common.util import banner
-from cloudmesh.common.util import path_expand
-from cloudmesh.common.Shell import Shell
-from cloudmesh.common.variables import Variables
+from cloudmesh.common.Printer import Printer
+from cloudmesh.common.util import readfile
 from cloudmesh.shell.command import PluginCommand
 from cloudmesh.shell.command import command
 from cloudmesh.shell.command import map_parameters
-from cloudmesh.common.Printer import Printer
 from tabulate import tabulate
-from cloudmesh.common.util import readfile, writefile
-import os
+
 
 class ApptainerCommand(PluginCommand):
     # noinspection PyUnusedLocal
@@ -36,27 +31,27 @@ class ApptainerCommand(PluginCommand):
                 apptainer exec NAME COMMAND 
                 apptainer stats NAME [--output=OUTPUT]
                         
-                  This command can be used to manage apptainers.
+                This command can be used to manage apptainers.
 
-                  Arguments:
-                      FILE   a file name
-                      PARAMETER  a parameterized parameter of the form "a[0-3],a5"
-                      OPTIONS   Options passed to the start command
-                      IMAGE     The name of the image to be used
-                      NAME      The name of the apptainer
-                      URL       The URL of the file to be downloaded
+                Arguments:
+                    FILE   a file name
+                    PARAMETER  a parameterized parameter of the form "a[0-3],a5"
+                    OPTIONS   Options passed to the start command
+                    IMAGE     The name of the image to be used
+                    NAME      The name of the apptainer
+                    URL       The URL of the file to be downloaded
 
-                  Options:
-                        --dir=DIRECTORY    sets the the directory of the a list of aptainers
-                        --add=SIF          adds a sif file to the list of apptainers
-                        --image=IMAGE      sets the image to be used
-                        --home=PWD         sets the home directory of the apptainer
-                        --gpu=GPU          sets the GPU to be used
-                        --command=COMMAND  sets the command to be executed
-                        --output=OUTPUT    the format of the output [default: table]
-                        --detail           shows more details [default: False]    
-                        -c COMMAND         sets the command to be executed
-                        
+                Options:
+                    --dir=DIRECTORY    sets the the directory of the a list of aptainers
+                    --add=SIF          adds a sif file to the list of apptainers
+                    --image=IMAGE      sets the image to be used
+                    --home=PWD         sets the home directory of the apptainer
+                    --gpu=GPU          sets the GPU to be used
+                    --command=COMMAND  sets the command to be executed
+                    --output=OUTPUT    the format of the output [default: table]
+                    --detail           shows more details [default: False]
+                    -c COMMAND         sets the command to be executed
+
             Description:
                   
                 cms apptainer list
@@ -64,7 +59,8 @@ class ApptainerCommand(PluginCommand):
                     by default the directory is 
 
                 cms apptainer --dir=DIRECTORY
-                    sets the default apptainer directory in the cms variable apptainer_dir
+                    sets the default apptainer directory in the cms variable
+                    apptainer_dir
                 
                 cms apptainer --add=SIF
                     adds a sif file to the list of apptainers
@@ -73,7 +69,8 @@ class ApptainerCommand(PluginCommand):
                     lists the cached apptainers
 
                 cms apptainer info
-                    prints information contained in the apptainer.yaml file. An example is given next
+                    prints information contained in the apptainer.yaml file.
+                    An example is given next
 
                     cloudmesh:
                         apptainer:
@@ -103,18 +100,13 @@ class ApptainerCommand(PluginCommand):
                                 ip: ''
                                 logErrPath: /home/$USER/.apptainer/instances/logs/udc-aj34-33/$USER/tfs.err
                                 logOutPath: /home/$USER/.apptainer/instances/logs/udc-aj34-33/$USER/tfs.out
+        """
 
-
-
-                                    """
-
-
-        #variables = Variables()
-        #variables["apptainer_dir"] = True
+        # variables = Variables()
+        # variables["apptainer_dir"] = True
 
         map_parameters(arguments, "output")
 
-        
         # arguments = Parameter.parse(
         #     arguments, parameter="expand", experiment="dict", COMMAND="str"
         # )
@@ -123,7 +115,7 @@ class ApptainerCommand(PluginCommand):
 
         app = Apptainer()
         r = app.images(directory="images")
-        
+
         if arguments["--dir"]:
             print("option dir")
 
@@ -131,7 +123,7 @@ class ApptainerCommand(PluginCommand):
             out = app.info()
             app.save()
             r = readfile("apptainer.yaml")
-            print (r)
+            print(r)
 
         elif arguments.list:
 
@@ -152,13 +144,16 @@ class ApptainerCommand(PluginCommand):
                     entry.pop("logErrPath")
                     entry.pop("logOutPath")
                 # print(Printer.write(data, order=None, output=arguments.output))
-                print(tabulate(data, headers="keys", tablefmt="simple_grid", showindex="always"))
+                print(tabulate(data,
+                               headers="keys",
+                               tablefmt="simple_grid",
+                               showindex="always"))
 
         elif arguments.cache:
 
             data = app.cache()
             print(Printer.attribute(data, output=arguments.output))
-            
+
         elif arguments["--add"]:
             print("option add")
             app.add_location(arguments["--add"])
@@ -169,11 +164,15 @@ class ApptainerCommand(PluginCommand):
 
         elif arguments.stats:
             r = app.stats(name=arguments.NAME, output="json")
-            
-            print (Printer.attribute(r, output=arguments.output))
-            
+
+            print(Printer.attribute(r, output=arguments.output))
+
         elif arguments.start:
-            r = app.start(name=arguments.NAME, image=arguments.IMAGE, home=arguments.home, gpu=arguments.gpu, options=arguments.OPTIONS)
+            r = app.start(name=arguments.NAME,
+                          image=arguments.IMAGE,
+                          home=arguments.home,
+                          gpu=arguments.gpu,
+                          options=arguments.OPTIONS)
 
         elif arguments.stop:
             r = app.stop(arguments.NAME)
@@ -187,25 +186,24 @@ class ApptainerCommand(PluginCommand):
 
             if os.path.isfile(command):
                 script = command
-                command = f"sh {script}"            
-                
-            
+                command = f"sh {script}"
+
             name = arguments.NAME
 
-            stdout,stderr = app.exec(name=name, command=command)
+            stdout, stderr = app.exec(name=name, command=command)
             print(stdout)
             print(stderr)
 
         elif arguments.images:
             directory = arguments.DIRECTORY
             data = app.images(directory=directory)
-            print (Printer.write(data,  output=arguments.output))
-        
+            print(Printer.write(data, output=arguments.output))
+
         elif arguments.download:
             name = arguments.NAME
             if not name.endswith(".sif"):
                 name += ".sif"
-            print (f"NAME>{name}<")
+            print(f"NAME>{name}<")
 
             app.download(name=name, url=arguments.URL)
 

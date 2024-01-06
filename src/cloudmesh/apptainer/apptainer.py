@@ -1,18 +1,17 @@
+import json
 import os
+import re
 import subprocess
 import sys
-from cloudmesh.common. variables import Variables
-from cloudmesh.common.parameter import Parameter
-from cloudmesh.common.util import path_expand
-from cloudmesh.common.util import banner
-from cloudmesh.common.Shell import Shell
-import re
-from cloudmesh.common.debug import VERBOSE
+
 import humanize
-import json
-import json
-from yamldb import YamlDB
+from cloudmesh.common.Shell import Shell
 from cloudmesh.common.console import Console
+from cloudmesh.common.util import banner
+from cloudmesh.common.util import path_expand
+from cloudmesh.common.variables import Variables
+
+from yamldb import YamlDB
 
 
 class Apptainer:
@@ -22,7 +21,7 @@ class Apptainer:
         self.apptainers = []
         self.variables = Variables()
         try:
-            self.hostname = os.environ.get("HOSTNAME") or os.uname()[1] 
+            self.hostname = os.environ.get("HOSTNAME") or os.uname()[1]
         except:
             self.hostname = "localhost"
         self.prefix = f"cloudmesh.apptainer"
@@ -40,8 +39,8 @@ class Apptainer:
             prefix = self.prefix
             self.db[f"{prefix}.hostname"] = self.hostname
             self.db[f"{prefix}.location"] = self.location
-            self.db[f"{prefix}.apptainers"] = self.apptainers 
-            self.db.save()  
+            self.db[f"{prefix}.apptainers"] = self.apptainers
+            self.db.save()
         except:
             Console.error("apptainer.yaml could not be written")
 
@@ -63,7 +62,6 @@ class Apptainer:
         else:
             Console.warning("apptainer.yaml does not exist")
 
-
     def load_location_from_db(self):
         self.load()
 
@@ -73,26 +71,32 @@ class Apptainer:
             if os.path.isdir(entry):
                 for name in os.listdir(entry):
                     if name.endswith(".sif"):
-                        location = entry + "/" + name  # Fix: Removed unnecessary curly braces
+                        location = entry + "/" + name
                         try:
                             size = humanize.naturalsize(os.path.getsize(location))
                         except:
                             size = "unknown"
                         if os.path.isfile(location):
-                            self.apptainers.append({"name": name, 
-                                                    "size": size, 
-                                                    "path": entry, 
-                                                    "location": location,
-                                                    "hostname": self.hostname}
-                                                    )  # Fix: Removed unnecessary double quotes
+                            self.apptainers.append(
+                                {"name": name,
+                                 "size": size,
+                                 "path": entry,
+                                 "location": location,
+                                 "hostname": self.hostname
+                                 })
             elif entry.endswith(".sif"):
                 if os.path.isfile(entry):
-                    self.apptainers.append({"name": os.path.basename(entry), "size": size, "path": os.path.dirname(entry), "location": entry})
+                    self.apptainers.append(
+                        {"name": os.path.basename(entry),
+                         "size": size,
+                         "path": os.path.dirname(entry),
+                         "location": entry
+                         })
                     try:
                         size = humanize.naturalsize(os.path.getsize(entry))
                     except:
                         size = "unknown"
-                        
+
     def add_location(self, path):
         """
         Adds a location to the Apptainer object.
@@ -105,7 +109,7 @@ class Apptainer:
         """
         if path not in self.location:
             self.location.append(path)
-        self.save() 
+        self.save()
         self.load_location_from_db()
 
     def images(self, directory=None):
@@ -113,14 +117,14 @@ class Apptainer:
         Retrieves a list of images from the apptainer.yaml file.
         
         Args:
-            directory (str): The directory to search for images. If not specified, all images will be retrieved.
+            directory (str): The directory to search for images.
+                             If not specified, all images will be retrieved.
         
         Returns:
             list: A list of images found in the specified directory.
         """
         all = self.load_location_from_db()
         return self.apptainers
-
 
     def ps(self):
         """
@@ -142,7 +146,7 @@ class Apptainer:
         Returns:
             tuple: A tuple containing the stdout and stderr of the command.
         """
-        if verbose: 
+        if verbose:
             print(command)
         process = subprocess.Popen(
             command,
@@ -173,7 +177,6 @@ class Apptainer:
         """
         r = self.info()['instances']
         return r
-    
 
     def info(self, logs=False, verbose=False):
         """
@@ -193,12 +196,11 @@ class Apptainer:
         if verbose:
             banner(command)
         stdout, stderr = self.system(command=command)
-        
+
         output_dict = json.loads(stdout)
         self.db[f"{self.prefix}.instances"] = output_dict["instances"]
-        
+
         return output_dict
-    
 
     def find_image(self, name, smart=True):
         """
@@ -216,10 +218,9 @@ class Apptainer:
         for image in self.apptainers:
             if name in image["name"]:
                 return image["name"], image["location"]
-        raise ValueError(f"Image {name} not found") 
-        
-    
-    # ...
+        raise ValueError(f"Image {name} not found")
+
+        # ...
 
     def inspect(self, name):
         """
@@ -234,13 +235,15 @@ class Apptainer:
         """
         _name, location = self.find_image(name)
         command = f"apptainer inspect --json {location}"
-        stdout, stderr = self.system(name="inspect", command=command, register=False)
+        stdout, stderr = self.system(name="inspect",
+                                     command=command,
+                                     register=False)
 
         data = json.loads(stdout)
 
         labels = data['data']['attributes']['labels']
         size = humanize.naturalsize(os.path.getsize(location))
-        
+
         result = {
             'name': _name,
             'location': location,
@@ -248,23 +251,21 @@ class Apptainer:
             "type": data["type"],
             "size": size
         }
-        
-        result.update(labels)
-        
-        return result
-    
 
+        result.update(labels)
+
+        return result
 
     def cache(self):
-        result, stderr = self.system(name="cache", 
-                                     command="apptainer cache list", 
+        result, stderr = self.system(name="cache",
+                                     command="apptainer cache list",
                                      register=False)
 
-        #output = "There are 1 container file(s) using 43.48 MiB and 66 oci blob file(s) using 7.01 GiB of space\nTotal space used: 7.05 GiB"
+        # output = "There are 1 container file(s) using 43.48 MiB and 66 oci blob file(s) using 7.01 GiB of space\nTotal space used: 7.05 GiB"
 
-        #another_possible_output = "There are 1 container file(s) using 469.52 MiB and 14 oci blob file(s) using 510.59 MiB of space
-        #Total space used: 980.10 MiB
-        #"
+        # another_possible_output = "There are 1 container file(s) using 469.52 MiB and 14 oci blob file(s) using 510.59 MiB of space
+        # Total space used: 980.10 MiB
+        # "
 
         container_files = re.search(r"There are (\d+) container file", result).group(1)
         container_space = re.search(r"using ([\d.]+) (MiB|GiB)", result).groups()
@@ -293,7 +294,6 @@ class Apptainer:
         }
         return data
 
-
     def stats(self, name=None, output=None, verbose=False):
         """
         Displays statistics about the instances.
@@ -316,17 +316,24 @@ class Apptainer:
         stdout, stderr = self.system(command=command, register=False)
         return stdout, stderr
 
-    def start(self, name=None, image=None, gpu=None, home=None, clean=True, options=None, dryrun=False):
+    def start(self,
+              name=None,
+              image=None,
+              gpu=None,
+              home=None,
+              clean=True,
+              options=None,
+              dryrun=False):
         if name is None:
             raise ValueError("Name of the instance must be specified")
         if image is None:
             raise ValueError("Image of the instance must be specified")
-        
+
         # check if name is not alrady in use
 
         if clean:
             try:
-                out,err = self.stop(name=name)
+                out, err = self.stop(name=name)
             except:
                 out = ""
 
@@ -347,8 +354,7 @@ class Apptainer:
         else:
             gpu_visible_devices = f"CUDA_VISIBLE_DEVICES={gpu} "
 
-
-        _name,path = self.find_image(image)
+        _name, path = self.find_image(image)
 
         banner(f"Start {name} {path} {home}")
 
@@ -361,26 +367,6 @@ class Apptainer:
             banner(command)
             stdout, stderr = self.system(name=name, command=command, register=True)
         return stdout, stderr
-    
-
-    # def start(self, gpu=None, clean=False, wait=True):
-    #     """
-    #     Starts the TFS instance.
-    #     1. fisrt ist looks for containers with the same name and stops them
-    #     2. it checks if no container with the name is used.
-    #     3. ist starts the container 
-
-    #     """
-
-    #     self.system(f"{gpu_visible_devices} apptainer instance start --nv --home {pwd} {self.IMAGE} {self.INSTANCE} ")
-
-    #     self.instance_exec(f"tensorflow_model_server --port={self.PORT} --rest_api_port=0 --model_config_file=benchmark/models.conf >& log-{self.INSTANCE}.log &")
-    #     r = self.system("apptainer instance list")
-
-    #     self.wait_for_port(port=self.PORT)
-
-    #     print ("Server is up")
-
 
     def stop(
         self, name=None, force=False, signal=None, timeout=10, user=None
@@ -400,9 +386,9 @@ class Apptainer:
         """
 
         command = "apptainer instance stop"
-        
+
         if name == "all":
-            command += " --all"            
+            command += " --all"
         else:
             if force:
                 command += " --force"
@@ -414,13 +400,12 @@ class Apptainer:
                 command += f" --user {user}"
             if name == "all":
                 command += " --all"
-            else :
+            else:
                 command += f" {name}"
         banner(command)
         stdout, stderr = self.system(name="stop", command=command, register=False)
         return stdout, stderr
 
-   
     def exec(self, name=None, command=None, bind=None, nv=False, home=None, verbose=False):
         """
         Execute a command in a container with optional bind paths, Nvidia support, and a specified home directory.
@@ -428,10 +413,12 @@ class Apptainer:
         Args:
             name (str): The container in which to execute the command.
             command (str): The command to execute.
-            bind (List[Dict[str, str]]): A list of dictionaries, each containing 'src', 'dest', and 'opts'. 'src' and 
-                                        'dest' are outside and inside paths. If 'dest' is not given, it is set equal to 'src'. 
-                                        Mount options ('opts') may be specified as 'ro' (read-only) or 'rw' (read/write, which is the default). 
-                                        Multiple bind paths can be given by a comma separated list.
+            bind (List[Dict[str, str]]): A list of dictionaries, each containing
+                'src', 'dest', and 'opts'. 'src' and 'dest' are outside and inside paths.
+                If 'dest' is not given, it is set equal to 'src'.
+                Mount options ('opts') may be specified as 'ro' (read-only) or 'rw' (read/write,
+                which is the default).
+                Multiple bind paths can be given by a comma separated list.
             nv (bool): A boolean to enable or disable Nvidia support.
             home (str): A string specifying the home directory.
 
@@ -442,15 +429,19 @@ class Apptainer:
             None
 
         Examples:
-            # Execute a command in a container without bind paths, Nvidia support, and a specified home directory
+            Execute a command in a container without bind paths,
+            Nvidia support, and a specified home directory
+
             exec("my_container", "ls")
 
-            # Execute a command in a container with bind paths, Nvidia support, and a specified home directory
-            exec("my_container", "ls", bind=[{"src": "/path1", "dest": "/path2", "opts": "ro"}, 
+            Execute a command in a container with bind paths, Nvidia support,
+            and a specified home directory
+
+            exec("my_container", "ls", bind=[{"src": "/path1", "dest": "/path2", "opts": "ro"},
             {"src": "/path3", "dest": "/path4", "opts": "rw"}], nv=True, home="/home/user")
         
         """
-        
+
         # Construct the command
         cmd = f"apptainer exec instance://{name} {command}"
 
@@ -472,7 +463,6 @@ class Apptainer:
 
         stdout, stderr = self.system(name="exec", command=cmd, register=False)
         return stdout, stderr
-    
 
     def shell(self, name):
         """
@@ -487,7 +477,7 @@ class Apptainer:
         command = f"apptainer shell instance://{name}"
         stdout, stderr = self.system(command=command)
         return stdout, stderr
-    
+
     def download(self, name=None, url=None):
         """
         Downloads an image from a URL.
@@ -504,7 +494,7 @@ class Apptainer:
             r = os.system(command)
             self.save()
         else:
-            Console.warning(f"Image {name} already exists")   
+            Console.warning(f"Image {name} already exists")
         assert r == 0
 
     def delete(self, name):
@@ -525,7 +515,7 @@ class Apptainer:
 def main():
     arguments = ' '.join(sys.argv[1:])
     os.system(f"cms apptainer {arguments}")
-    
+
+
 if __name__ == "__main__":
     main()
-
