@@ -84,26 +84,26 @@ Command apptainer
         apptainer exec NAME COMMAND 
         apptainer stats NAME [--output=OUTPUT]
 
-          This command can be used to manage apptainers.
+        This command can be used to manage apptainers.
 
-          Arguments:
-              FILE   a file name
-              PARAMETER  a parameterized parameter of the form "a[0-3],a5"
-              OPTIONS   Options passed to the start command
-              IMAGE     The name of the image to be used
-              NAME      The name of the apptainer
-              URL       The URL of the file to be downloaded
+        Arguments:
+            FILE   a file name
+            PARAMETER  a parameterized parameter of the form "a[0-3],a5"
+            OPTIONS   Options passed to the start command
+            IMAGE     The name of the image to be used
+            NAME      The name of the apptainer
+            URL       The URL of the file to be downloaded
 
-          Options:
-                --dir=DIRECTORY    sets the the directory of the a list of aptainers
-                --add=SIF          adds a sif file to the list of apptainers
-                --image=IMAGE      sets the image to be used
-                --home=PWD         sets the home directory of the apptainer
-                --gpu=GPU          sets the GPU to be used
-                --command=COMMAND  sets the command to be executed
-                --output=OUTPUT    the format of the output [default: table]
-                --detail           shows more details [default: False]    
-                -c COMMAND         sets the command to be executed
+        Options:
+            --dir=DIRECTORY    sets the the directory of the a list of aptainers
+            --add=SIF          adds a sif file to the list of apptainers
+            --image=IMAGE      sets the image to be used
+            --home=PWD         sets the home directory of the apptainer
+            --gpu=GPU          sets the GPU to be used
+            --command=COMMAND  sets the command to be executed
+            --output=OUTPUT    the format of the output [default: table]
+            --detail           shows more details [default: False]
+            -c COMMAND         sets the command to be executed
 
     Description:
 
@@ -112,7 +112,8 @@ Command apptainer
             by default the directory is 
 
         cms apptainer --dir=DIRECTORY
-            sets the default apptainer directory in the cms variable apptainer_dir
+            sets the default apptainer directory in the cms variable
+            apptainer_dir
 
         cms apptainer --add=SIF
             adds a sif file to the list of apptainers
@@ -121,7 +122,8 @@ Command apptainer
             lists the cached apptainers
 
         cms apptainer info
-            prints information contained in the apptainer.yaml file. An example is given next
+            prints information contained in the apptainer.yaml file.
+            An example is given next
 
             cloudmesh:
                 apptainer:
@@ -151,9 +153,5 @@ Command apptainer
                         ip: ''
                         logErrPath: /home/$USER/.apptainer/instances/logs/udc-aj34-33/$USER/tfs.err
                         logOutPath: /home/$USER/.apptainer/instances/logs/udc-aj34-33/$USER/tfs.out
-
-
-
 ```
 <!-- STOP-MANUAL -->
-
