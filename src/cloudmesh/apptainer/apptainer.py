@@ -216,6 +216,9 @@ class Apptainer:
         Returns:
             str: The image of the instance.
         """
+        if name.endswith(".sif"):
+            return os.path.basename(name), name
+    
         for image in self.apptainers:
             if image["name"] == name:
                 return image["name"], image["location"]
@@ -450,7 +453,10 @@ class Apptainer:
             {"src": "/path3", "dest": "/path4", "opts": "rw"}], nv=True, home="/home/user")
 
         """
-
+        if name is None:
+            raise ValueError("Name of the instance must be specified")
+        if command is None:
+            raise ValueError("Command to execute must be specified")
         # Construct the command
         cmd = f"apptainer exec instance://{name} {command}"
 
