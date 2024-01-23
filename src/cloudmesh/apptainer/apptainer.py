@@ -167,8 +167,8 @@ class Apptainer:
         Returns:
             tuple: A tuple containing the stdout and stderr of the command.
         """
-        r = self.info()["instances"]
-        return r
+        self.instances = self.info()["instances"]
+        return self.instances
 
     def info(self, logs=False, verbose=False):
         """
@@ -448,16 +448,20 @@ class Apptainer:
         if command is None:
             raise ValueError("Command to execute must be specified")
         # Construct the command
-        cmd = f"apptainer exec instance://{name} {command}"
+        cmd = f"apptainer exec"
+
+        # Add Nvidia support
+        if nv:
+            cmd += " --nv"
+        
+        
+        cmd += f" instance://{name} {command}"
 
         # Add bind paths
         if bind:
             for b in bind:
                 cmd += f" --bind {b['src']}:{b.get('dest', b['src'])}:{b.get('opts', 'rw')}"
 
-        # Add Nvidia support
-        if nv:
-            cmd += " --nv"
 
         # Add home directory
         if home:
