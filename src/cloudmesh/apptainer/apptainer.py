@@ -236,7 +236,7 @@ class Apptainer:
 
         data = json.loads(stdout)
 
-        labels = data["data"]["attributes"]["labels"]
+        attributes = data["data"]["attributes"]["labels"]
         size = humanize.naturalsize(os.path.getsize(location))
 
         result = image
@@ -246,7 +246,7 @@ class Apptainer:
             "hostname": self.hostname,
             "type": data["type"],
             "size": size,
-            "labels": labels,
+            "attributes": attributes,
         })
 
         return result
