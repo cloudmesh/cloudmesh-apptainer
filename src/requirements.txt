@@ -1,2 +1,0 @@
-yamldb
-cloudmesh-cmd5

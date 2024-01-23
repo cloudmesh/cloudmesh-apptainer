@@ -83,6 +83,7 @@ class Apptainer:
                                     "size": size,
                                     "path": entry,
                                     "location": location,
+                                    "abs_location": os.path.abspath(location),
                                     "hostname": self.hostname,
                                 }
                             )
@@ -94,6 +95,8 @@ class Apptainer:
                             "size": size,
                             "path": os.path.dirname(entry),
                             "location": entry,
+                            "abs_location": os.path.abspath(entry),
+
                         }
                     )
                     try:
@@ -221,10 +224,10 @@ class Apptainer:
     
         for image in self.apptainers:
             if image["name"] == name:
-                return image["name"], image["location"]
+                return image["name"], image["abs_location"]
         for image in self.apptainers:
             if name in image["name"]:
-                return image["name"], image["location"]
+                return image["name"], image["abs_location"]
         raise ValueError(f"Image {name} not found")
 
         # ...
