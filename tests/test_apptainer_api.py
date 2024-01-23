@@ -92,7 +92,7 @@ class TestConfig:
 
 
         # print the list of found images absed on load
-        images = apptainer.images()
+        images = apptainer.images
 
         print (images)
         print_table(images)
@@ -119,9 +119,11 @@ class TestConfig:
         where = apptainer.find_image("tf.sif")
         print(where)
         Benchmark.Stop()
-        assert len(where) == 2
-        assert where[0] == "tf.sif" or "images/tf.sif"
-        assert where[1] == "images/tf.sif" or "tf.sif"
+        assert len(where) == 5  # dict has 5 keys
+        assert where['name'] == "dot-tf.sif"
+        assert where['location'] == "images/dot-tf.sif"
+        assert where['hostname'] == "localhost"
+        assert where['path'] == os.getcwd() + "/images/" + where['name']
 
 
     def test_add_location(self):

@@ -15,10 +15,11 @@ from yamldb import YamlDB
 
 
 class Apptainer:
+
     def __init__(self):
         self.processes = []
         self.location = []
-        self.apptainers = []
+        self.instances = []
         self.variables = Variables()
         try:
             self.hostname = os.environ.get("HOSTNAME") or os.uname()[1]
@@ -27,7 +28,7 @@ class Apptainer:
         self.prefix = f"cloudmesh.apptainer"
 
         self.db = YamlDB(filename="apptainer.yaml")
-        self. images = self.load_location_from_db()
+        self.images = self.load_location_from_db()
 
         self.save()
 
@@ -39,7 +40,8 @@ class Apptainer:
             prefix = self.prefix
             self.db[f"{prefix}.hostname"] = self.hostname
             self.db[f"{prefix}.location"] = self.location
-            self.db[f"{prefix}.apptainers"] = self.apptainers
+            self.db[f"{prefix}.images"] = self.images
+            self.db[f"{prefix}.instances"] = self.instances
             self.db.save()
         except:
             Console.error("apptainer.yaml could not be written")
@@ -56,16 +58,16 @@ class Apptainer:
             except:
                 self.location = ["images"]
             try:
-                self.apptainers = self.db[f"{prefix}.apptainers"]
+                self.images = self.db[f"{prefix}.images"]
             except:
-                self.apptainers = []
+                self.images = []
         else:
             Console.warning("apptainer.yaml does not exist")
 
     def load_location_from_db(self):
         self.load()
 
-        self.apptainers = []
+        self.images = []
         for entry in self.location:
             entry = path_expand(entry)
             if os.path.isdir(entry):
@@ -77,26 +79,23 @@ class Apptainer:
                         except:
                             size = "unknown"
                         if os.path.isfile(location):
-                            self.apptainers.append(
+                            self.images.append(
                                 {
                                     "name": name,
                                     "size": size,
-                                    "path": entry,
+                                    "path": os.path.abspath(location),
                                     "location": location,
-                                    "abs_location": os.path.abspath(location),
                                     "hostname": self.hostname,
                                 }
                             )
             elif entry.endswith(".sif"):
                 if os.path.isfile(entry):
-                    self.apptainers.append(
+                    self.images.append(
                         {
                             "name": os.path.basename(entry),
                             "size": size,
-                            "path": os.path.dirname(entry),
+                            "path": os.path.abspath(location),
                             "location": entry,
-                            "abs_location": os.path.abspath(entry),
-
                         }
                     )
                     try:
@@ -118,20 +117,6 @@ class Apptainer:
             self.location.append(path)
         self.save()
         self.load_location_from_db()
-
-    def images(self, directory=None):
-        """
-        Retrieves a list of images from the apptainer.yaml file.
-
-        Args:
-            directory (str): The directory to search for images.
-                             If not specified, all images will be retrieved.
-
-        Returns:
-            list: A list of images found in the specified directory.
-        """
-        all = self.load_location_from_db()
-        return all
 
     def ps(self):
         """
@@ -224,10 +209,10 @@ class Apptainer:
     
         for image in self.images:
             if image["name"] == name:
-                return image["name"], image["abs_location"]
+                return image
         for image in self.images:
             if name in image["name"]:
-                return image["name"], image["abs_location"]
+                return image
         raise ValueError(f"Image {name} not found")
 
         # ...
@@ -243,7 +228,9 @@ class Apptainer:
             dict: A dictionary containing the JSON data from stdout.
             str: The stderr of the command.
         """
-        _name, location = self.find_image(name)
+        image = self.find_image(name)
+        location = image["path"]
+        name = image["name"]
         command = f"apptainer inspect --json {location}"
         stdout, stderr = self.system(name="inspect", command=command, register=False)
 
@@ -252,15 +239,15 @@ class Apptainer:
         labels = data["data"]["attributes"]["labels"]
         size = humanize.naturalsize(os.path.getsize(location))
 
-        result = {
-            "name": _name,
-            "location": location,
+        result = image
+
+        result.update({
+            "name": image["name"],
             "hostname": self.hostname,
             "type": data["type"],
             "size": size,
-        }
-
-        result.update(labels)
+            "labels": labels,
+        })
 
         return result
 
@@ -366,8 +353,8 @@ class Apptainer:
         else:
             gpu_visible_devices = f"CUDA_VISIBLE_DEVICES={gpu} "
 
-        _name, path = self.find_image(image)
-
+        _image = self.find_image(image)
+        path = _image["path"]
         banner(f"Start {name} {path} {home}")
 
         command = (
