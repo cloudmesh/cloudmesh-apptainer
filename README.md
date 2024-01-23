@@ -130,7 +130,7 @@ Command apptainer
                     location:
                     - ~/.cloudmesh/apptainer
                     - ../rivanna/images
-                    apptainers:
+                    images:
                     - name: cloudmesh-tfs.sif
                         size: 1.5 GB
                         path: ../rivanna/images

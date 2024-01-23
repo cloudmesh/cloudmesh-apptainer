@@ -27,7 +27,7 @@ class Apptainer:
         self.prefix = f"cloudmesh.apptainer"
 
         self.db = YamlDB(filename="apptainer.yaml")
-        self.load_location_from_db()
+        self. images = self.load_location_from_db()
 
         self.save()
 
@@ -131,7 +131,7 @@ class Apptainer:
             list: A list of images found in the specified directory.
         """
         all = self.load_location_from_db()
-        return self.apptainers
+        return all
 
     def ps(self):
         """
@@ -219,13 +219,13 @@ class Apptainer:
         Returns:
             str: The image of the instance.
         """
-        if name.endswith(".sif"):
-            return os.path.basename(name), name
+        #if name.endswith(".sif"):
+        #    return os.path.basename(name), name
     
-        for image in self.apptainers:
+        for image in self.images:
             if image["name"] == name:
                 return image["name"], image["abs_location"]
-        for image in self.apptainers:
+        for image in self.images:
             if name in image["name"]:
                 return image["name"], image["abs_location"]
         raise ValueError(f"Image {name} not found")
