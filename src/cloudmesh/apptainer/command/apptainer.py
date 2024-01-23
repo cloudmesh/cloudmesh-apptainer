@@ -114,7 +114,7 @@ class ApptainerCommand(PluginCommand):
         # VERBOSE(arguments)
 
         app = Apptainer()
-        r = app.images(directory="images")
+        r = app.load_location_from_db()
 
         if arguments["--dir"]:
             print("option dir")
@@ -196,7 +196,7 @@ class ApptainerCommand(PluginCommand):
 
         elif arguments.images:
             directory = arguments.DIRECTORY
-            data = app.images(directory=directory)
+            data = app.images
             print(Printer.write(data, output=arguments.output))
 
         elif arguments.download:
