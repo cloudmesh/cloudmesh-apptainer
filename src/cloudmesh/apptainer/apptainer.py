@@ -13,6 +13,7 @@ from cloudmesh.common.variables import Variables
 
 from yamldb import YamlDB
 
+from pprint import pprint
 
 class Apptainer:
 
@@ -207,12 +208,15 @@ class Apptainer:
         #if name.endswith(".sif"):
         #    return os.path.basename(name), name
     
-        for image in self.images:
-            if image["name"] == name:
-                return image
-        for image in self.images:
-            if name in image["name"]:
-                return image
+        pprint ("SSS")
+        pprint(self.images)
+        for key in ["name", "path", "location"]:
+            for image in self.images:
+                if image[key] == name:
+                    return image
+            for image in self.images:
+                if name in image[key]:
+                    return image
         raise ValueError(f"Image {name} not found")
 
         # ...
