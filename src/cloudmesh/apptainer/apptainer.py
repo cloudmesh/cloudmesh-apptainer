@@ -208,8 +208,6 @@ class Apptainer:
         #if name.endswith(".sif"):
         #    return os.path.basename(name), name
     
-        pprint ("SSS")
-        pprint(self.images)
         for key in ["name", "path", "location"]:
             for image in self.images:
                 if image[key] == name:
