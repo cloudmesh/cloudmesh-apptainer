@@ -129,8 +129,6 @@ class ApptainerCommand(PluginCommand):
             detail = arguments["--detail"]
 
             out = app.list()
-
-            print ("OOOO", out)
             app.save()
             r = readfile("apptainer.yaml")
             prefix = app.prefix
